@@ -1,0 +1,201 @@
+<%# TV-Tools main view %>
+<%
+local disp = require "luci.dispatcher"
+local uci = require "luci.model.uci".cursor()
+local tv = {}
+tv.adb_url = pcdata(disp.build_url("admin", "services", "tv-tools", "adb"))
+tv.tvinfo_url = pcdata(disp.build_url("admin", "services", "tv-tools", "tvinfo"))
+tv.textinput_url = pcdata(disp.build_url("admin", "services", "tv-tools", "textinput"))
+tv.screencap_url = pcdata(disp.build_url("admin", "services", "tv-tools", "screencap"))
+tv.screencap_cfg_url = pcdata(disp.build_url("admin", "services", "tv-tools", "screencap_cfg"))
+tv.capture_url = pcdata(disp.build_url("admin", "services", "tv-tools", "capture"))
+tv.apps_list_url = pcdata(disp.build_url("admin", "services", "tv-tools", "apps", "list"))
+tv.apps_uninstall_url = pcdata(disp.build_url("admin", "services", "tv-tools", "apps", "uninstall"))
+tv.apps_refresh_url = pcdata(disp.build_url("admin", "services", "tv-tools", "apps", "refresh"))
+tv.apps_install_url = pcdata(disp.build_url("admin", "services", "tv-tools", "apps", "install"))
+tv.syshell_banner_url = pcdata(disp.build_url("admin", "services", "tv-tools", "syshell", "banner"))
+tv.syshell_exec_url = pcdata(disp.build_url("admin", "services", "tv-tools", "syshell", "exec"))
+local cap_auto = uci:get("tv_tools", "main", "cap_auto_refresh") or "1"
+local cap_itv = uci:get("tv_tools", "main", "cap_interval_ms") or "2000"
+tv.css = pcdata('/luci-static/tv-tools/tv-tools.css?v=3.8')
+tv.js = pcdata('/luci-static/tv-tools/tv-tools.js?v=2.7')
+%>
+<%+header%>
+
+<link rel="stylesheet" type="text/css" href="<%=tv.css%>" />
+
+<div id="tv-tools-app" class="tv-tools" data-adb-url="<%=tv.adb_url%>" data-tvinfo-url="<%=tv.tvinfo_url%>" data-textinput-url="<%=tv.textinput_url%>" data-screencap-url="<%=tv.screencap_url%>" data-screencap-cfg-url="<%=tv.screencap_cfg_url%>" data-cap-auto-refresh="<%=pcdata(cap_auto)%>" data-cap-interval-ms="<%=pcdata(cap_itv)%>" data-capture-url="<%=tv.capture_url%>" data-apps-list-url="<%=tv.apps_list_url%>" data-apps-uninstall-url="<%=tv.apps_uninstall_url%>" data-apps-refresh-url="<%=tv.apps_refresh_url%>" data-apps-install-url="<%=tv.apps_install_url%>" data-syshell-banner-url="<%=tv.syshell_banner_url%>" data-syshell-exec-url="<%=tv.syshell_exec_url%>">
+	<!-- 第一行：仅标签切换 -->
+	<header class="tv-tools__top tv-tools__top--tabs">
+		<nav class="tv-tools__tabs" role="tablist" aria-label="TV-Tools 功能分区">
+			<button type="button" class="tv-tools__tab is-active" data-tab="home-tv" role="tab" aria-selected="true">首页-TV</button>
+			<button type="button" class="tv-tools__tab" data-tab="apps" role="tab" aria-selected="false">应用管理</button>
+			<button type="button" class="tv-tools__tab" data-tab="screenshot" role="tab" aria-selected="false">屏幕快照</button>
+			<button type="button" class="tv-tools__tab" data-tab="openclash-tools" role="tab" aria-selected="false">OpenClash-Tools</button>
+			<button type="button" class="tv-tools__tab" data-tab="syshell" role="tab" aria-selected="false">Syshell</button>
+		</nav>
+	</header>
+
+	<!-- 中间：随标签变化的内容区 -->
+	<main class="tv-tools__main">
+		<section class="tv-tools__panel is-visible tv-home" data-panel="home-tv" role="tabpanel">
+			<div class="tv-home__layout">
+				<div class="tv-home__info" aria-labelledby="tv-info-heading">
+					<div class="tv-home__info-head">
+						<h3 class="tv-home__sr-only" id="tv-info-heading">电视信息</h3>
+						<div class="tv-home__status-wrap" id="tv-adb-state" aria-live="polite">
+							<span class="tv-home__tag tv-home__tag--muted">加载中…</span>
+						</div>
+					</div>
+					<dl class="tv-home__dl tv-home__dl--tv" id="tv-base-dl">
+						<dt>状态</dt>
+						<dd>等待 ADB 数据…</dd>
+					</dl>
+				</div>
+				<div class="tv-home__remote-wrap">
+					<div class="tv-remote" id="tv-remote-keys" aria-label="电视遥控">
+						<div class="tv-remote__toolbar">
+							<button type="button" class="tv-remote__btn tv-remote__btn--wide" data-key="power" title="电源键">开关机</button>
+							<button type="button" class="tv-remote__btn" data-key="home" title="主页">Home</button>
+							<button type="button" class="tv-remote__btn" data-key="back" title="返回">返回</button>
+						</div>
+						<div class="tv-remote__dpad" role="group" aria-label="方向与确定">
+							<span class="tv-remote__pad-spacer"></span>
+							<button type="button" class="tv-remote__btn" data-key="up" title="上">上</button>
+							<span class="tv-remote__pad-spacer"></span>
+							<button type="button" class="tv-remote__btn" data-key="left" title="左">左</button>
+							<button type="button" class="tv-remote__btn tv-remote__btn--ok" data-key="ok" title="确定">确定</button>
+							<button type="button" class="tv-remote__btn" data-key="right" title="右">右</button>
+							<span class="tv-remote__pad-spacer"></span>
+							<button type="button" class="tv-remote__btn" data-key="down" title="下">下</button>
+							<span class="tv-remote__pad-spacer"></span>
+						</div>
+						<div class="tv-remote__toolbar tv-remote__toolbar--vol">
+							<button type="button" class="tv-remote__btn" data-key="vol_minus" title="音量减">VOL−</button>
+							<button type="button" class="tv-remote__btn" data-key="mute" title="静音">静音</button>
+							<button type="button" class="tv-remote__btn" data-key="vol_plus" title="音量加">VOL+</button>
+							<button type="button" class="tv-remote__btn" data-key="menu" title="菜单">菜单</button>
+						</div>
+					</div>
+					<div class="tv-remote__textrow">
+						<label class="tv-remote__text-label" for="tv-text-to-tv">文本发送到电视焦点输入框</label>
+						<input type="text" id="tv-text-to-tv" class="tv-remote__text" name="tv_text_to_tv" autocomplete="off" enterkeyhint="send" placeholder="回车发送；中文经剪贴板+粘贴(279)，需焦点在输入框" />
+					</div>
+					
+				</div>
+			</div>
+		</section>
+		<section class="tv-tools__panel" data-panel="apps" role="tabpanel" hidden>
+			<div class="tv-apps">
+				<div class="tv-apps__toolbar">
+					<button type="button" class="tv-tools__btn" id="tv-apps-refresh">刷新</button>
+					<button type="button" class="tv-tools__btn tv-apps__filter is-active" data-apps-scope="user" id="tv-apps-filter-user" data-apps-filter-label="用户应用">用户应用[0]</button>
+					<button type="button" class="tv-tools__btn tv-apps__filter" data-apps-scope="system" id="tv-apps-filter-system" data-apps-filter-label="系统应用">系统应用[0]</button>
+					<span class="tv-apps__toolbar-spacer" aria-hidden="true"></span>
+					<label class="tv-apps__search-label">
+						<span class="tv-home__sr-only">筛选当前列表</span>
+						<input
+							type="search"
+							id="tv-apps-search"
+							class="tv-apps__search"
+							placeholder="搜索"
+							autocomplete="off"
+							enterkeyhint="search"
+						/>
+					</label>
+				</div>
+				<div class="tv-apps__install-row">
+					<label class="tv-apps__file-label">
+						<span class="tv-apps__file-text">选择 APK</span>
+						<!-- 勿写 accept：手机系统常按 MIME/扩展名过滤，APK 易被标灰不可选；安装前由 JS 校验 .apk -->
+						<input type="file" id="tv-apps-apk" class="tv-apps__file" />
+					</label>
+					<button type="button" class="tv-tools__btn tv-tools__btn--primary" id="tv-apps-install">上传并安装</button>
+				</div>
+				<div class="tv-apps__quick-row">
+					<select id="tv-apps-user-select" class="tv-apps__user-select" aria-label="用户应用列表"></select>
+					<button type="button" class="tv-tools__btn" id="tv-apps-cache-restart">缓存/重启</button>
+				</div>
+				<div class="tv-apps__tablewrap">
+					<table id="tv-apps-table" class="tv-apps__table tv-apps__table--scope-user" aria-label="已安装应用">
+						<thead>
+							<tr>
+								<th class="tv-apps__th-pkg">包名</th>
+								<th class="tv-apps__th-note">说明</th>
+								<th class="tv-apps__th-path">完整路径</th>
+								<th class="tv-apps__th-act">操作</th>
+							</tr>
+						</thead>
+						<tbody id="tv-apps-tbody"></tbody>
+					</table>
+				</div>
+			</div>
+		</section>
+		<section class="tv-tools__panel tv-tools__panel--cap" data-panel="screenshot" role="tabpanel" hidden>
+			<div class="tv-cap">
+				<div class="tv-cap__toolbar">
+					<label class="tv-cap__cfg">
+						<input type="checkbox" id="tv-cap-auto" />
+						<span>自动刷新</span>
+					</label>
+					<label class="tv-cap__cfg">
+						<span>间隔</span>
+						<select id="tv-cap-interval">
+							<option value="1000">1 秒</option>
+							<option value="1500">1.5 秒</option>
+							<option value="2000">2 秒</option>
+							<option value="3000">3 秒</option>
+							<option value="5000">5 秒</option>
+						</select>
+					</label>
+					<button type="button" class="tv-tools__btn" id="tv-cap-save">保存</button>
+				</div>
+				<img
+					id="tv-cap-img"
+					class="tv-cap__img tv-cap__img--empty"
+					alt=""
+					decoding="async"
+					draggable="false"
+				/>
+			</div>
+		</section>
+		<section class="tv-tools__panel" data-panel="openclash-tools" role="tabpanel" hidden>
+			<p class="tv-tools__hint">OpenClash-Tools：覆写、策略与优化相关设置（待实现）。</p>
+		</section>
+		<section class="tv-tools__panel tv-tools__panel--syshell" data-panel="syshell" role="tabpanel" hidden aria-label="路由器 Shell">
+			<div class="tv-syshell" id="tv-syshell-root">
+				<pre class="tv-syshell__screen" id="tv-syshell-screen" tabindex="-1" role="log" aria-live="polite"></pre>
+				<div class="tv-syshell__inputrow">
+					<span class="tv-syshell__prompt" id="tv-syshell-prompt" aria-hidden="true"># </span>
+					<input
+						type="text"
+						id="tv-syshell-cmd"
+						class="tv-syshell__input"
+						name="tv_syshell_cmd"
+						autocomplete="off"
+						autocorrect="off"
+						autocapitalize="off"
+						spellcheck="false"
+						enterkeyhint="send"
+						aria-label="路由器 shell 命令"
+						placeholder="输入命令后回车（在路由器上执行，与 SSH 类似）"
+					/>
+				</div>
+				<p class="tv-syshell__warn">仅在可信网络使用；等同于已登录 LuCI 的管理员在路由器 shell 中操作。</p>
+			</div>
+		</section>
+	</main>
+
+	<!-- 底部：本插件全局操作日志 -->
+	<footer class="tv-tools__log">
+		<div class="tv-tools__log-head">
+			<span>全局日志（所有标签共用）</span>
+			<button type="button" class="tv-tools__btn tv-tools__btn--ghost" id="tv-tools-log-clear">清空</button>
+		</div>
+		<pre class="tv-tools__log-body" id="tv-tools-log" aria-live="polite"></pre>
+	</footer>
+</div>
+
+<script src="<%=tv.js%>"></script>
+
+<%+footer%>

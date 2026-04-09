@@ -1,0 +1,1666 @@
+/**
+ * TV-Tools — 深色界面：与 LuCI / Argon 等主题并存时保持对比度与可读性
+ */
+.tv-tools {
+	--tv-bg: #1c1c2a;
+	--tv-surface: #262636;
+	--tv-surface-elevated: #2c2c3e;
+	--tv-border: rgba(130, 140, 200, 0.2);
+	--tv-border-strong: rgba(150, 165, 220, 0.32);
+	--tv-text: #eaeaf2;
+	--tv-muted: #9a9ab0;
+	--tv-accent: #6b96ff;
+	--tv-accent-hover: #8cb0ff;
+	--tv-accent-dim: rgba(107, 150, 255, 0.14);
+	--tv-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.22);
+	--tv-shadow-md: 0 4px 20px rgba(0, 0, 0, 0.28);
+	--tv-radius: 8px;
+	--tv-font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+
+	box-sizing: border-box;
+	font-family: var(--tv-font);
+	color: var(--tv-text);
+	margin: -1rem -1.5rem 0;
+	padding: 0.75rem 1rem 1rem;
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	clear: both;
+	height: auto;
+	max-height: none;
+	min-height: 0;
+	overflow: visible;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: 0.5rem;
+	background: linear-gradient(160deg, #181b28 0%, var(--tv-bg) 42%, #141622 100%);
+}
+
+.tv-tools *,
+.tv-tools *::before,
+.tv-tools *::after {
+	box-sizing: border-box;
+}
+
+.tv-tools__top {
+	flex: 0 0 auto;
+	justify-self: start;
+	width: fit-content;
+	max-width: 100%;
+	min-width: 0;
+	position: relative;
+	z-index: 2;
+	/* 默认隐藏横向滚动：内容未溢出时 auto 仍可能出滚动条；窄屏平板见下方 media */
+	overflow-x: hidden;
+	overflow-y: hidden;
+	-webkit-overflow-scrolling: touch;
+	scrollbar-width: thin;
+	scrollbar-color: rgba(107, 150, 255, 0.35) transparent;
+	display: flex;
+	align-items: center;
+	background: var(--tv-surface-elevated);
+	border: 1px solid var(--tv-border);
+	border-radius: var(--tv-radius);
+	padding: 0.2rem 0.5rem;
+	margin: 0;
+	box-shadow: var(--tv-shadow-sm), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+	pointer-events: auto;
+}
+
+/* 第一行仅标签条（与 .tv-tools__top 同元素时收紧边距） */
+.tv-tools__top--tabs {
+	padding: 0.15rem 0.45rem;
+}
+
+.tv-tools__top--tabs .tv-tools__tabs {
+	flex: 1 1 auto;
+	min-width: 0;
+	width: 100%;
+	max-width: 100%;
+	position: relative;
+	z-index: 1;
+	overflow: visible;
+	flex-wrap: nowrap;
+	pointer-events: auto;
+}
+
+.tv-tools__meta--inline {
+	margin: 0.75rem 0 0;
+}
+
+.tv-tools__brand {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.5rem 1rem;
+	margin-bottom: 0.75rem;
+}
+
+.tv-tools__title {
+	font-size: 1.35rem;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	color: var(--tv-text);
+}
+
+.tv-tools__subtitle {
+	font-size: 0.85rem;
+	color: var(--tv-muted);
+}
+
+.tv-tools__meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-bottom: 1rem;
+}
+
+.tv-tools__chip {
+	display: inline-block;
+	padding: 0.25rem 0.65rem;
+	font-size: 0.75rem;
+	border-radius: 999px;
+	background: var(--tv-accent-dim);
+	color: var(--tv-accent);
+	border: 1px solid rgba(107, 150, 255, 0.35);
+}
+
+.tv-tools__tabs {
+	display: flex;
+	flex-wrap: nowrap;
+	gap: 0.25rem;
+	align-items: center;
+	border-top: none;
+	padding: 0;
+	margin: 0;
+}
+
+/* 提高与 Argon 等深色主题的对比，避免「看不见、像点不了」 */
+.tv-tools .tv-tools__tab {
+	-webkit-appearance: none;
+	appearance: none;
+	margin: 0;
+	flex: 0 0 auto;
+	border: 1px solid rgba(255, 255, 255, 0.28);
+	background: rgba(255, 255, 255, 0.1);
+	color: #e8ecf7;
+	padding: 0.35rem 0.45rem;
+	font-size: 0.78rem;
+	font-weight: 500;
+	line-height: 1.25;
+	border-radius: 5px;
+	cursor: pointer;
+	pointer-events: auto;
+	opacity: 1;
+	visibility: visible;
+	transition: color 0.15s, background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.tv-tools .tv-tools__tab:hover {
+	color: #fff;
+	background: rgba(255, 255, 255, 0.18);
+	border-color: rgba(255, 255, 255, 0.45);
+}
+
+.tv-tools .tv-tools__tab:focus-visible {
+	outline: 2px solid var(--tv-accent);
+	outline-offset: 2px;
+}
+
+.tv-tools .tv-tools__tab.is-active {
+	color: #fff;
+	background: rgba(107, 150, 255, 0.52);
+	border-color: rgba(160, 195, 255, 0.88);
+	font-weight: 600;
+	box-shadow: 0 0 0 1px rgba(107, 150, 255, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.tv-tools__main {
+	flex: 0 1 auto;
+	justify-self: stretch;
+	width: 100%;
+	min-width: 0;
+	min-height: auto;
+	overflow: visible;
+	display: flex;
+	flex-direction: column;
+	background: var(--tv-surface);
+	border: 1px solid var(--tv-border);
+	border-radius: var(--tv-radius);
+	padding: 0.85rem 1rem;
+	margin: 0;
+	box-shadow: var(--tv-shadow-md);
+}
+
+.tv-tools__panel[hidden] {
+	display: none !important;
+}
+
+.tv-tools__panel:not([hidden]) {
+	display: block;
+	flex: 0 1 auto;
+	min-height: auto;
+	overflow-x: hidden;
+	overflow-y: visible;
+}
+
+.tv-tools__hint {
+	color: var(--tv-muted);
+	font-size: 0.9rem;
+	margin: 0 0 0.75rem;
+	line-height: 1.5;
+}
+
+.tv-tools__list {
+	margin: 0;
+	padding-left: 1.25rem;
+	color: var(--tv-text);
+	font-size: 0.875rem;
+	line-height: 1.7;
+}
+
+.tv-tools__list code {
+	font-size: 0.8em;
+	background: rgba(0, 0, 0, 0.35);
+	padding: 0.1em 0.35em;
+	border-radius: 4px;
+	border: 1px solid var(--tv-border);
+}
+
+.tv-tools__log {
+	flex: 0 0 auto;
+	justify-self: stretch;
+	width: 100%;
+	min-width: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	overflow: visible;
+	background: #12121a;
+	border: 1px solid var(--tv-border);
+	border-radius: var(--tv-radius);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+	text-align: left;
+	direction: ltr;
+}
+
+.tv-tools__log-head {
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.4rem 0.75rem;
+	font-size: 0.78rem;
+	color: var(--tv-muted);
+	border-bottom: 1px solid var(--tv-border);
+	background: rgba(0, 0, 0, 0.25);
+	text-align: left;
+	direction: ltr;
+}
+
+.tv-tools__log-body {
+	flex: 0 1 auto;
+	/* 至少 8 行正文：8×line-height×font-size + 上下 padding */
+	min-height: calc(8 * 1.45 * 0.78rem + 0.6rem + 0.6rem);
+	display: block;
+	width: 100%;
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0.6rem 0.85rem;
+	overflow-x: auto;
+	overflow-y: visible;
+	font-size: 0.78rem;
+	line-height: 1.45;
+	color: #b8c5d8;
+	font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+	white-space: pre-wrap;
+	word-break: break-all;
+	text-align: left;
+	direction: ltr;
+	unicode-bidi: isolate;
+	float: none;
+	clear: both;
+}
+
+.tv-tools__btn {
+	font: inherit;
+	cursor: pointer;
+	border-radius: 6px;
+	border: 1px solid var(--tv-border);
+	padding: 0.25rem 0.6rem;
+	font-size: 0.75rem;
+}
+
+.tv-tools__btn--ghost {
+	background: transparent;
+	color: var(--tv-muted);
+}
+
+.tv-tools__btn--ghost:hover {
+	color: var(--tv-accent);
+	border-color: rgba(107, 150, 255, 0.45);
+}
+
+/* 与 Argon 等主题并存时，弱化 Luci 默认段落边距 */
+.tv-tools .tv-tools__main > .tv-tools__panel:first-child .tv-tools__hint {
+	margin-top: 0;
+}
+
+/* ========== 首页-TV：左信息 / 右遥控 ========== */
+.tv-home {
+	padding-bottom: 0.25rem;
+}
+
+.tv-home__layout {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+	gap: 1rem 1.25rem;
+	align-items: start;
+	min-width: 0;
+}
+
+.tv-home__title {
+	margin: 0 0 0.55rem;
+	font-size: 0.88rem;
+	font-weight: 600;
+	color: var(--tv-text);
+	letter-spacing: 0.02em;
+}
+
+.tv-home__sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+.tv-home__info-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 0.45rem 0.75rem;
+	margin: 0 0 0.5rem;
+	min-width: 0;
+}
+
+.tv-home__status-wrap {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.35rem;
+	justify-content: flex-start;
+	max-width: 100%;
+	min-width: 0;
+}
+
+.tv-home__info,
+.tv-home__remote-wrap {
+	min-width: 0;
+	background: rgba(0, 0, 0, 0.16);
+	border: 1px solid var(--tv-border);
+	border-radius: calc(var(--tv-radius) - 1px);
+	padding: 0.65rem 0.75rem;
+	box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+}
+
+.tv-home__dl {
+	display: grid;
+	grid-template-columns: minmax(4.5rem, auto) minmax(0, 1fr);
+	gap: 0.4rem 0.85rem;
+	align-items: baseline;
+	margin: 0;
+	font-size: 0.8rem;
+	line-height: 1.45;
+}
+
+/* 基础信息：电视字段为主，窄屏改为上下堆叠避免挤压 */
+.tv-home__dl--tv {
+	font-size: 0.8rem;
+}
+
+.tv-home__dl dt {
+	margin: 0;
+	color: var(--tv-muted);
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+.tv-home__dl dd {
+	margin: 0;
+	color: var(--tv-text);
+	word-break: break-word;
+	overflow-wrap: anywhere;
+	min-width: 0;
+}
+
+.tv-home__tag {
+	display: inline-block;
+	padding: 0.12rem 0.45rem;
+	font-size: 0.72rem;
+	border-radius: 999px;
+	border: 1px solid var(--tv-border);
+	max-width: 100%;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+}
+
+.tv-home__tag--muted {
+	color: var(--tv-muted);
+	background: rgba(255, 255, 255, 0.04);
+}
+
+.tv-home__tag--ok {
+	color: #c4dcff;
+	border-color: rgba(107, 150, 255, 0.5);
+	background: rgba(107, 150, 255, 0.16);
+}
+
+.tv-home__tag--host {
+	font-size: 0.68rem;
+	color: #c8d4e8;
+	border-color: rgba(120, 130, 180, 0.45);
+	background: rgba(0, 0, 0, 0.22);
+	margin-left: 0.15rem;
+}
+
+.tv-home__tag--host-muted {
+	color: var(--tv-muted);
+	border-color: var(--tv-border);
+	background: rgba(255, 255, 255, 0.04);
+}
+
+.tv-home__hint {
+	margin: 0.5rem 0 0;
+	font-size: 0.72rem;
+	color: var(--tv-muted);
+	line-height: 1.4;
+}
+
+/* 遥控区：类十字键 + 工具条 */
+.tv-remote {
+	display: flex;
+	flex-direction: column;
+	gap: 0.45rem;
+	min-width: 0;
+}
+
+.tv-remote__toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem;
+	align-items: center;
+	justify-content: flex-start;
+}
+
+.tv-remote__toolbar--center {
+	justify-content: center;
+}
+
+.tv-remote__toolbar--vol {
+	flex-wrap: nowrap;
+}
+
+@media screen and (max-width: 380px) {
+	.tv-remote__toolbar--vol {
+		flex-wrap: wrap;
+	}
+}
+
+.tv-remote__textrow {
+	margin-top: 0.5rem;
+	min-width: 0;
+}
+
+.tv-remote__text-label {
+	display: block;
+	margin: 0 0 0.3rem;
+	font-size: 0.7rem;
+	color: var(--tv-muted);
+	line-height: 1.35;
+}
+
+.tv-remote__text {
+	display: block;
+	width: 100%;
+	min-width: 0;
+	box-sizing: border-box;
+	padding: 0.5rem 0.55rem;
+	font: inherit;
+	font-size: 0.8rem;
+	color: var(--tv-text);
+	background: rgba(0, 0, 0, 0.28);
+	border: 1px solid var(--tv-border);
+	border-radius: 6px;
+	touch-action: manipulation;
+}
+
+.tv-remote__text::placeholder {
+	color: rgba(152, 152, 168, 0.85);
+	font-size: 0.72rem;
+}
+
+.tv-remote__text:focus {
+	outline: 2px solid var(--tv-accent);
+	outline-offset: 1px;
+	border-color: rgba(107, 150, 255, 0.45);
+}
+
+.tv-remote__code {
+	font-family: ui-monospace, Consolas, monospace;
+	font-size: 0.68em;
+	padding: 0.05em 0.25em;
+	background: rgba(0, 0, 0, 0.35);
+	border-radius: 4px;
+	border: 1px solid var(--tv-border);
+}
+
+.tv-remote__dpad {
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr;
+	grid-template-rows: auto auto auto;
+	gap: 0.35rem;
+	max-width: 11.5rem;
+	margin: 0 auto;
+}
+
+.tv-remote__pad-spacer {
+	min-height: 0;
+	pointer-events: none;
+}
+
+.tv-remote__btn {
+	-webkit-appearance: none;
+	appearance: none;
+	margin: 0;
+	min-height: 2.1rem;
+	min-width: 2.75rem;
+	padding: 0.35rem 0.5rem;
+	font: inherit;
+	font-size: 0.78rem;
+	font-weight: 500;
+	color: #e8ecf7;
+	background: rgba(255, 255, 255, 0.1);
+	border: 1px solid rgba(255, 255, 255, 0.28);
+	border-radius: 6px;
+	cursor: pointer;
+	pointer-events: auto;
+	transition: background 0.12s, border-color 0.12s, color 0.12s;
+	touch-action: manipulation;
+}
+
+.tv-remote__btn:hover {
+	background: rgba(255, 255, 255, 0.16);
+	border-color: rgba(255, 255, 255, 0.42);
+	color: #fff;
+}
+
+.tv-remote__btn:active {
+	background: rgba(107, 150, 255, 0.32);
+	border-color: rgba(107, 150, 255, 0.58);
+}
+
+.tv-remote__btn--wide {
+	flex: 1 1 auto;
+	min-width: 5rem;
+	max-width: 100%;
+}
+
+.tv-remote__btn--ok {
+	font-weight: 600;
+	background: rgba(107, 150, 255, 0.26);
+	border-color: rgba(107, 150, 255, 0.52);
+}
+
+/* ========== 屏幕快照：单图随内容增高，整页由 LuCI 外层滚动 ========== */
+.tv-tools__main .tv-tools__panel--cap {
+	margin: -0.85rem -1rem;
+	padding: 0;
+	flex: 0 1 auto;
+	min-height: max(12rem, 42vh);
+	display: flex;
+	flex-direction: column;
+	overflow: visible;
+	background: #0a0a10;
+	border-radius: 0;
+	box-shadow: none;
+}
+
+.tv-cap {
+	flex: 0 1 auto;
+	min-width: 0;
+	width: 100%;
+	min-height: max(11rem, 38vh);
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	align-items: center;
+	justify-content: center;
+}
+
+.tv-cap__toolbar {
+	position: sticky;
+	left: 50%;
+	top: 0.35rem;
+	transform: translateX(-50%);
+	z-index: 6;
+	display: inline-flex;
+	flex-wrap: nowrap;
+	align-items: center;
+	gap: 0.4rem 0.6rem;
+	padding: 0.32rem 0.55rem;
+	border-radius: 999px;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	background: rgba(16, 18, 28, 0.38);
+	backdrop-filter: blur(6px);
+	-webkit-backdrop-filter: blur(6px);
+	box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+	max-width: calc(100% - 1rem);
+	overflow-x: auto;
+}
+
+.tv-cap__cfg {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.28rem;
+	font-size: 0.74rem;
+	color: var(--tv-text);
+}
+
+.tv-cap__cfg select {
+	font: inherit;
+	font-size: 0.72rem;
+	padding: 0.2rem 0.35rem;
+	border-radius: 6px;
+	border: 1px solid var(--tv-border);
+	background: rgba(0, 0, 0, 0.28);
+	color: var(--tv-text);
+}
+
+@media screen and (max-width: 768px) {
+	.tv-cap__toolbar {
+		top: 0.35rem;
+		gap: 0.28rem 0.4rem;
+		padding: 0.28rem 0.42rem;
+	}
+}
+
+.tv-cap__img {
+	width: 100%;
+	height: auto;
+	max-width: 100%;
+	max-height: min(88vh, 56rem);
+	object-fit: contain;
+	object-position: center;
+	background: #000;
+	display: block;
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-touch-callout: none;
+	touch-action: manipulation;
+}
+
+.tv-cap__img--empty {
+	opacity: 0.35;
+	filter: grayscale(1);
+	pointer-events: none;
+}
+
+/* ========== 应用管理 ========== */
+.tv-apps {
+	font-size: 0.78rem;
+	min-width: 0;
+}
+
+.tv-apps__toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.4rem 0.5rem;
+	margin-bottom: 0.55rem;
+}
+
+.tv-apps__toolbar-spacer {
+	flex: 1 1 auto;
+	min-width: 0.25rem;
+}
+
+.tv-apps__search-label {
+	display: flex;
+	align-items: center;
+	flex: 0 1 auto;
+	min-width: 0;
+}
+
+.tv-apps__search {
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 11rem;
+	min-width: 5.5rem;
+	font: inherit;
+	font-size: 0.74rem;
+	padding: 0.24rem 0.45rem;
+	border-radius: 6px;
+	border: 1px solid var(--tv-border);
+	background: rgba(0, 0, 0, 0.28);
+	color: var(--tv-text);
+}
+
+.tv-apps__search::placeholder {
+	color: var(--tv-muted);
+}
+
+.tv-apps__search:focus {
+	outline: none;
+	border-color: rgba(107, 150, 255, 0.65);
+	box-shadow: 0 0 0 1px rgba(107, 150, 255, 0.35);
+}
+
+.tv-apps__filter.is-active {
+	color: #fff;
+	background: rgba(107, 150, 255, 0.55);
+	border-color: rgba(160, 195, 255, 0.95);
+	font-weight: 600;
+	box-shadow: 0 0 0 1px rgba(107, 150, 255, 0.45);
+}
+
+.tv-apps__install-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.45rem 0.55rem;
+	margin-bottom: 0.6rem;
+}
+
+.tv-apps__quick-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: center;
+	column-gap: 0.45rem;
+	margin-bottom: 0.6rem;
+	min-width: 0;
+}
+
+.tv-apps__user-select {
+	width: 100%;
+	min-width: 0;
+	max-width: 100%;
+	font: inherit;
+	font-size: 0.74rem;
+	padding: 0.3rem 0.45rem;
+	border-radius: 6px;
+	border: 1px solid var(--tv-border);
+	background: rgba(0, 0, 0, 0.28);
+	color: var(--tv-text);
+}
+
+.tv-apps__user-select:focus {
+	outline: none;
+	border-color: rgba(107, 150, 255, 0.65);
+	box-shadow: 0 0 0 1px rgba(107, 150, 255, 0.35);
+}
+
+@media screen and (min-width: 560px) {
+	.tv-apps__user-select {
+		min-width: 14rem;
+	}
+}
+
+@media screen and (max-width: 559px) {
+	.tv-apps__quick-row {
+		grid-template-columns: minmax(0, 1fr);
+		row-gap: 0.4rem;
+	}
+}
+
+.tv-apps__file-label {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	border: 1px solid var(--tv-border);
+	border-radius: 6px;
+	padding: 0.26rem 0.6rem;
+	min-height: 2.25rem;
+	font-size: 0.75rem;
+	color: var(--tv-text);
+	background: rgba(0, 0, 0, 0.2);
+	max-width: 100%;
+	overflow: hidden;
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: rgba(107, 150, 255, 0.2);
+}
+
+.tv-apps__file-label:hover {
+	border-color: rgba(107, 150, 255, 0.55);
+	color: #fff;
+}
+
+/* 勿用 1px+clip 藏 input：iOS/WebKit 上常点不到、文件项呈灰色；改为透明铺满 label */
+.tv-apps__file {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	padding: 0;
+	opacity: 0;
+	cursor: pointer;
+	font-size: 16px;
+	line-height: 1;
+	z-index: 2;
+	border: 0;
+}
+
+.tv-apps__file-text {
+	position: relative;
+	z-index: 1;
+	pointer-events: none;
+}
+
+.tv-tools__btn--primary {
+	background: rgba(107, 150, 255, 0.35);
+	border-color: rgba(107, 150, 255, 0.65);
+	color: #fff;
+	font-weight: 600;
+}
+
+.tv-tools__btn--primary:hover {
+	background: rgba(107, 150, 255, 0.5);
+	border-color: rgba(160, 195, 255, 0.9);
+}
+
+.tv-apps__tablewrap {
+	margin-top: 0.15rem;
+	border: 1px solid var(--tv-border);
+	border-radius: var(--tv-radius);
+	overflow: auto;
+	-webkit-overflow-scrolling: touch;
+	/* 表头约一行 + 最多 15 行数据 */
+	max-height: calc(2.1rem + 15 * (0.76rem * 1.45 + 0.52rem));
+	min-height: 4rem;
+}
+
+.tv-apps__table {
+	width: 100%;
+	border-collapse: collapse;
+	table-layout: fixed;
+	font-size: 0.76rem;
+	line-height: 1.45;
+}
+
+.tv-apps__table thead th {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	padding: 0.38rem 0.45rem;
+	text-align: left;
+	font-weight: 600;
+	color: var(--tv-muted);
+	background: var(--tv-surface);
+	border-bottom: 1px solid var(--tv-border);
+	box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+}
+
+.tv-apps__table tbody td {
+	padding: 0.42rem 0.45rem;
+	vertical-align: middle;
+	border-bottom: 1px solid rgba(120, 130, 180, 0.12);
+	word-break: break-word;
+}
+
+/* 覆盖 LuCI / 主题表格斑马纹，避免浅色行导致字看不清 */
+.tv-tools .tv-apps__table tbody tr {
+	background: rgba(0, 0, 0, 0.2);
+	color: var(--tv-text);
+}
+
+.tv-tools .tv-apps__table tbody tr:nth-child(even) {
+	background: rgba(255, 255, 255, 0.05);
+}
+
+.tv-tools .tv-apps__table tbody tr:hover {
+	background: rgba(107, 150, 255, 0.12);
+}
+
+.tv-apps__th-pkg,
+.tv-apps__pkg {
+	width: 28%;
+	min-width: 0;
+}
+
+/* 包名完整换行显示 */
+.tv-apps__pkg {
+	word-break: break-all;
+	overflow-wrap: anywhere;
+	white-space: normal;
+	hyphens: auto;
+	cursor: copy;
+	-webkit-user-select: text;
+	user-select: text;
+}
+
+.tv-apps__th-note,
+.tv-apps__note {
+	width: 18%;
+	min-width: 0;
+}
+
+.tv-apps__th-path,
+.tv-apps__path {
+	width: 46%;
+	min-width: 0;
+}
+
+.tv-apps__th-act,
+.tv-apps__act {
+	width: 8%;
+	min-width: 3.2rem;
+	text-align: right;
+}
+
+.tv-apps__ellip {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	cursor: copy;
+}
+
+.tv-apps__path.tv-apps__ellip {
+	cursor: copy;
+}
+
+.tv-apps__uninstall {
+	padding: 0.18rem 0.42rem;
+	font-size: 0.72rem;
+}
+
+.tv-apps__uninstall--update {
+	color: #fff;
+	background: rgba(200, 50, 55, 0.42);
+	border-color: rgba(255, 100, 105, 0.75);
+}
+
+.tv-apps__uninstall--update:hover {
+	background: rgba(220, 65, 70, 0.55);
+	border-color: rgba(255, 130, 135, 0.9);
+}
+
+.tv-apps__act-none {
+	color: var(--tv-muted);
+	font-size: 0.72rem;
+}
+
+.tv-apps__loading,
+.tv-apps__empty,
+.tv-apps__err {
+	text-align: center;
+	color: var(--tv-muted);
+	padding: 0.75rem 0.5rem !important;
+}
+
+.tv-apps__err {
+	color: #f0a0a0;
+}
+
+@media screen and (max-width: 720px) {
+	.tv-apps__th-pkg,
+	.tv-apps__pkg {
+		width: 32%;
+	}
+
+	.tv-apps__th-note,
+	.tv-apps__note {
+		width: 22%;
+	}
+
+	.tv-apps__th-path,
+	.tv-apps__path {
+		width: 38%;
+	}
+
+	.tv-apps__th-act,
+	.tv-apps__act {
+		width: 8%;
+		min-width: 3rem;
+	}
+
+	.tv-home__layout {
+		grid-template-columns: 1fr;
+		gap: 0.75rem;
+	}
+
+	.tv-remote__dpad {
+		max-width: 100%;
+	}
+
+	.tv-home__info-head {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.tv-home__status-wrap {
+		justify-content: flex-start;
+	}
+}
+
+@supports (height: 100dvh) {
+	.tv-tools__main .tv-tools__panel--cap {
+		min-height: max(12rem, 42dvh);
+	}
+
+	.tv-cap {
+		min-height: max(11rem, 38dvh);
+	}
+
+	.tv-cap__img {
+		max-height: min(88dvh, 56rem);
+	}
+}
+
+/* ========== 桌面 / 大屏：标签条通栏、主区留白、控件略放大（不影响 DOM / JS） ========== */
+@media screen and (min-width: 960px) {
+	.tv-tools {
+		--tv-radius: 10px;
+		padding: 0.9rem 1.15rem 1.15rem;
+		gap: 0.55rem;
+	}
+
+	.tv-tools__top {
+		width: 100%;
+		max-width: 100%;
+		align-self: stretch;
+		padding: 0.25rem 0.55rem;
+		overflow-x: hidden;
+	}
+
+	.tv-tools__top--tabs {
+		padding: 0.2rem 0.5rem;
+	}
+
+	.tv-tools .tv-tools__tab {
+		padding: 0.42rem 0.65rem;
+		font-size: 0.82rem;
+		border-radius: 6px;
+	}
+
+	.tv-tools__main {
+		padding: 1rem 1.2rem;
+	}
+
+	.tv-tools__main .tv-tools__panel--cap {
+		margin: -1rem -1.2rem;
+	}
+
+	.tv-home__layout {
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+		gap: 1.15rem 1.5rem;
+	}
+
+	.tv-home__info,
+	.tv-home__remote-wrap {
+		padding: 0.75rem 0.9rem;
+	}
+
+	.tv-remote__btn {
+		min-height: 2.25rem;
+		min-width: 2.85rem;
+		font-size: 0.8rem;
+	}
+
+	.tv-remote__dpad {
+		max-width: 12rem;
+	}
+
+	.tv-apps__search {
+		max-width: 16rem;
+	}
+
+	.tv-apps__toolbar {
+		margin-bottom: 0.65rem;
+	}
+
+	.tv-tools__log-head {
+		padding: 0.45rem 0.85rem;
+		font-size: 0.8rem;
+	}
+
+	.tv-tools__log-body {
+		padding: 0.65rem 0.9rem;
+		font-size: 0.8rem;
+		min-height: calc(8 * 1.45 * 0.8rem + 0.65rem + 0.65rem);
+	}
+
+	.tv-tools.tv-tools--shell-focus .tv-tools__main {
+		margin: 0 -1.15rem;
+	}
+}
+
+/* 平板宽度且标签不换行时，仅在此区间允许横向滑动标签（避免桌面/手机误出滚动条） */
+@media screen and (min-width: 769px) and (max-width: 959px) {
+	.tv-tools__top {
+		overflow-x: auto;
+	}
+
+	.tv-tools__top--tabs .tv-tools__tabs {
+		flex: 0 1 auto;
+		width: auto;
+		max-width: none;
+	}
+}
+
+/* ========== 手机 / 窄屏：流式高度 + 整页随 LuCI 滚动；导航条全宽更易点 ========== */
+@media screen and (max-width: 768px) {
+	.tv-home__dl--tv {
+		grid-template-columns: minmax(4.5rem, 30%) minmax(0, 1fr);
+		gap: 0.28rem 0.45rem;
+		font-size: 0.72rem;
+		line-height: 1.35;
+		align-items: center;
+	}
+
+	.tv-home__dl--tv dt {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.tv-home__dl--tv dd {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		word-break: normal;
+		overflow-wrap: normal;
+	}
+
+	.tv-tools {
+		margin: 0;
+		padding: max(0.35rem, env(safe-area-inset-top, 0px)) max(0.45rem, env(safe-area-inset-right, 0px))
+			max(0.45rem, env(safe-area-inset-bottom, 0px)) max(0.45rem, env(safe-area-inset-left, 0px));
+		width: 100%;
+		max-width: 100%;
+		min-width: 0;
+		height: auto;
+		max-height: none;
+		min-height: 0;
+		overflow: visible;
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		background: var(--tv-bg);
+	}
+
+	.tv-tools__top {
+		justify-self: stretch;
+		width: 100%;
+		max-width: 100%;
+		align-items: center;
+		overflow-x: hidden;
+		overflow-y: hidden;
+		padding: 0.15rem 0.4rem;
+	}
+
+	.tv-tools__top--tabs {
+		padding: 0.12rem 0.35rem;
+	}
+
+	.tv-tools__top--tabs .tv-tools__tabs {
+		flex-wrap: wrap;
+		justify-content: flex-start;
+		row-gap: 0.22rem;
+		column-gap: 0.22rem;
+	}
+
+	.tv-tools .tv-tools__tab {
+		min-height: 2.05rem;
+		padding: 0.28rem 0.52rem;
+		font-size: 0.78rem;
+		touch-action: manipulation;
+		-webkit-tap-highlight-color: rgba(107, 150, 255, 0.25);
+		flex: 0 0 auto;
+	}
+
+	.tv-tools__main {
+		padding: 0.6rem 0.65rem;
+	}
+
+	.tv-tools__main .tv-tools__panel--cap {
+		margin: -0.6rem -0.65rem;
+	}
+
+	.tv-tools__list code {
+		word-break: break-all;
+		overflow-wrap: anywhere;
+	}
+
+	.tv-tools__log-head {
+		flex-wrap: wrap;
+		gap: 0.3rem;
+		padding: 0.35rem 0.5rem;
+		font-size: 0.74rem;
+	}
+
+	.tv-tools__log-head span {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+
+	.tv-tools__btn {
+		min-height: 2.1rem;
+		padding: 0.3rem 0.55rem;
+		touch-action: manipulation;
+	}
+
+	.tv-tools__log-body {
+		font-size: 0.71rem;
+		padding: 0.4rem 0.5rem;
+		min-height: calc(8 * 1.45 * 0.71rem + 0.4rem + 0.4rem);
+	}
+
+	/* 应用列表：手机端每行固定一行，超出省略；轻点复制不触发系统划选 */
+	.tv-apps__toolbar .tv-tools__btn,
+	.tv-apps__filter {
+		touch-action: manipulation;
+		-webkit-tap-highlight-color: rgba(107, 150, 255, 0.2);
+	}
+
+	.tv-apps__file-label {
+		min-height: 2.75rem;
+		padding: 0.35rem 0.75rem;
+		font-size: 0.8rem;
+	}
+
+	.tv-apps__tablewrap {
+		max-height: calc(2rem + 15 * 2.4rem);
+	}
+
+	.tv-apps__table thead th {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		padding: 0.32rem 0.35rem;
+		font-size: 0.72rem;
+	}
+
+	.tv-apps__table tbody td:not(.tv-apps__act) {
+		padding: 0.3rem 0.35rem;
+		line-height: 1.25;
+		max-width: 0;
+		word-break: normal;
+		overflow-wrap: normal;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		vertical-align: middle;
+	}
+
+	.tv-apps__table tbody td.tv-apps__pkg {
+		word-break: normal;
+		overflow-wrap: normal;
+		white-space: nowrap;
+		-webkit-user-select: none;
+		user-select: none;
+	}
+
+	.tv-apps__table tbody td.tv-apps__note,
+	.tv-apps__table tbody td.tv-apps__path {
+		-webkit-user-select: none;
+		user-select: none;
+	}
+
+	.tv-apps__table tbody td.tv-apps__act {
+		max-width: none;
+		width: auto;
+		min-width: 3.25rem;
+		overflow: visible;
+		text-overflow: clip;
+		white-space: nowrap;
+		vertical-align: middle;
+	}
+
+	.tv-apps__copy {
+		cursor: pointer;
+		-webkit-tap-highlight-color: rgba(107, 150, 255, 0.22);
+		touch-action: manipulation;
+	}
+
+	/* 手机 + 用户应用：隐藏「说明」列，包名允许多行尽量展全；系统应用仍显示 sys / sys.update */
+	.tv-tools .tv-apps__table.tv-apps__table--scope-user .tv-apps__th-note,
+	.tv-tools .tv-apps__table.tv-apps__table--scope-user .tv-apps__note {
+		display: none !important;
+		width: 0 !important;
+		min-width: 0 !important;
+		max-width: 0 !important;
+		padding: 0 !important;
+		border-width: 0 !important;
+		overflow: hidden !important;
+	}
+
+	.tv-tools .tv-apps__table.tv-apps__table--scope-user .tv-apps__th-pkg,
+	.tv-tools .tv-apps__table.tv-apps__table--scope-user .tv-apps__pkg {
+		width: 48%;
+	}
+
+	.tv-tools .tv-apps__table.tv-apps__table--scope-user .tv-apps__th-path,
+	.tv-tools .tv-apps__table.tv-apps__table--scope-user .tv-apps__path {
+		width: 36%;
+	}
+
+	.tv-tools .tv-apps__table.tv-apps__table--scope-user tbody td.tv-apps__pkg {
+		max-width: none;
+		white-space: normal;
+		overflow: visible;
+		text-overflow: clip;
+		word-break: break-all;
+		overflow-wrap: anywhere;
+		line-height: 1.35;
+	}
+
+	/* 手机 + 系统应用：说明列仅随 sys / sys.update 宽度，不占固定大比例 */
+	.tv-tools .tv-apps__table.tv-apps__table--scope-system {
+		table-layout: auto;
+	}
+
+	.tv-tools .tv-apps__table.tv-apps__table--scope-system .tv-apps__th-note,
+	.tv-tools .tv-apps__table.tv-apps__table--scope-system .tv-apps__note {
+		width: auto;
+		min-width: 0;
+		max-width: none;
+		white-space: nowrap;
+		padding-left: 0.28rem;
+		padding-right: 0.28rem;
+	}
+
+	.tv-tools .tv-apps__table.tv-apps__table--scope-system tbody td.tv-apps__note {
+		max-width: none;
+		width: auto;
+	}
+
+	.tv-tools .tv-apps__table.tv-apps__table--scope-system .tv-apps__th-pkg,
+	.tv-tools .tv-apps__table.tv-apps__table--scope-system .tv-apps__pkg {
+		width: auto;
+		max-width: 34%;
+		min-width: 0;
+	}
+
+	.tv-tools .tv-apps__table.tv-apps__table--scope-system .tv-apps__th-path,
+	.tv-tools .tv-apps__table.tv-apps__table--scope-system .tv-apps__path {
+		width: auto;
+		min-width: 0;
+	}
+
+	.tv-tools .tv-apps__table.tv-apps__table--scope-system .tv-apps__th-act,
+	.tv-tools .tv-apps__table.tv-apps__table--scope-system .tv-apps__act {
+		width: auto;
+		white-space: nowrap;
+	}
+}
+
+@media screen and (max-width: 380px) {
+	.tv-tools .tv-tools__tab {
+		font-size: 0.72rem;
+		padding: 0.24rem 0.42rem;
+		min-height: 1.85rem;
+	}
+}
+
+/* ========== Mobile Visual Polish (整体美观优化) ========== */
+@media screen and (max-width: 768px) {
+	.tv-tools {
+		margin: 0;
+		padding: 0.38rem 0.42rem 0.48rem;
+		background: linear-gradient(160deg, #171a27 0%, #1b1d2a 100%);
+		gap: 0.45rem;
+	}
+
+	.tv-tools__top {
+		width: 100%;
+		padding: 0.35rem;
+		border-radius: 10px;
+		border: 1px solid rgba(145, 160, 225, 0.26);
+		background: rgba(18, 21, 31, 0.72);
+		box-shadow: 0 4px 14px rgba(0, 0, 0, 0.24);
+		overflow-x: auto;
+		overflow-y: hidden;
+	}
+
+	.tv-tools__top--tabs .tv-tools__tabs {
+		display: flex;
+		flex-wrap: nowrap;
+		gap: 0.28rem;
+		width: max-content;
+		min-width: 100%;
+		padding: 0;
+		background: transparent;
+	}
+
+	.tv-tools .tv-tools__tab {
+		width: auto;
+		min-width: 5.2rem;
+		min-height: 1.8rem;
+		padding: 0.18rem 0.5rem;
+		border-radius: 8px;
+		font-size: 0.7rem;
+		text-align: center;
+		line-height: 1.2;
+		background: rgba(255, 255, 255, 0.08);
+		border-color: rgba(255, 255, 255, 0.22);
+	}
+
+	.tv-tools__main {
+		padding: 0.62rem;
+		border-radius: 10px;
+	}
+
+	.tv-home__info,
+	.tv-home__remote-wrap,
+	.tv-tools__log {
+		border-radius: 10px;
+	}
+
+	/* 截图工具条：仅在当前容器内，贴图上方，不再悬浮覆盖导航 */
+	.tv-cap {
+		gap: 0.48rem;
+	}
+
+	.tv-cap__toolbar {
+		position: static;
+		left: auto;
+		top: auto;
+		transform: none;
+		z-index: 1;
+		width: 100%;
+		max-width: 100%;
+		justify-content: flex-start;
+		gap: 0.18rem 0.26rem;
+		padding: 0.2rem 0.26rem;
+		border-radius: 10px;
+		border: 1px solid rgba(145, 160, 225, 0.24);
+		background: rgba(18, 21, 31, 0.56);
+		box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+		overflow-x: auto;
+	}
+
+	.tv-cap__cfg {
+		font-size: 0.62rem;
+		white-space: nowrap;
+		gap: 0.16rem;
+	}
+
+	.tv-cap__cfg select {
+		font-size: 0.62rem;
+		padding: 0.06rem 0.2rem;
+		border-radius: 5px;
+	}
+
+	#tv-cap-save {
+		min-height: 1.3rem;
+		padding: 0.08rem 0.34rem;
+		font-size: 0.62rem;
+	}
+
+	.tv-cap__img {
+		border-radius: 8px;
+		border: 1px solid rgba(145, 160, 225, 0.22);
+	}
+
+	/* 应用区和日志更紧凑 */
+	.tv-apps__toolbar {
+		gap: 0.35rem 0.4rem;
+	}
+
+	.tv-apps__search {
+		max-width: 100%;
+		min-width: 0;
+	}
+
+	.tv-tools__log-head {
+		padding: 0.34rem 0.5rem;
+	}
+
+	.tv-tools__log-body {
+		min-height: calc(7 * 1.45 * 0.71rem + 0.35rem + 0.35rem);
+	}
+}
+
+@media screen and (max-width: 420px) {
+	.tv-tools .tv-tools__tab {
+		min-width: 4.9rem;
+		font-size: 0.68rem;
+	}
+}
+
+/* ========== OpenClash-Tools 占位（仅样式，逻辑待实现） ========== */
+.tv-tools .tv-tools__panel[data-panel="openclash-tools"]:not([hidden]) {
+	display: flex !important;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	min-height: 14rem;
+	padding: 1.5rem 1rem 2rem;
+	box-sizing: border-box;
+}
+
+.tv-tools .tv-tools__panel[data-panel="openclash-tools"] .tv-tools__hint {
+	margin: 0;
+	max-width: 26rem;
+	text-align: center;
+	padding: 1.1rem 1.35rem;
+	border: 1px dashed var(--tv-border-strong);
+	border-radius: var(--tv-radius);
+	background: rgba(0, 0, 0, 0.18);
+	line-height: 1.55;
+	color: var(--tv-muted);
+}
+
+@media screen and (max-width: 768px) {
+	.tv-tools .tv-tools__panel[data-panel="openclash-tools"]:not([hidden]) {
+		min-height: min(42vh, 18rem);
+		padding: 1rem 0.65rem 1.5rem;
+	}
+
+	.tv-tools .tv-tools__panel[data-panel="openclash-tools"] .tv-tools__hint {
+		padding: 0.95rem 1rem;
+		font-size: 0.85rem;
+	}
+}
+
+/* ========== Syshell：路由器 shell（满屏终端区，隐藏底部全局日志） ========== */
+.tv-tools.tv-tools--shell-focus {
+	height: 100vh;
+	height: 100dvh;
+	max-height: 100vh;
+	max-height: 100dvh;
+	overflow: hidden;
+	min-height: 0;
+	box-sizing: border-box;
+}
+
+.tv-tools.tv-tools--shell-focus .tv-tools__top {
+	flex-shrink: 0;
+}
+
+.tv-tools.tv-tools--shell-focus .tv-tools__log {
+	display: none !important;
+}
+
+.tv-tools.tv-tools--shell-focus .tv-tools__main {
+	flex: 1 1 0;
+	min-height: 0;
+	max-height: none;
+	display: flex;
+	flex-direction: column;
+	padding: 0;
+	margin: 0 -0.5rem;
+	overflow: hidden;
+	border-radius: 0;
+}
+
+.tv-tools__panel--syshell {
+	padding: 0 !important;
+	margin: 0;
+	flex: 1 1 auto;
+	min-height: 0;
+}
+
+.tv-tools__panel--syshell:not([hidden]) {
+	display: flex !important;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-height: 0;
+}
+
+.tv-syshell {
+	flex: 1 1 auto;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	background: #161616;
+	color: #e4e4e4;
+}
+
+.tv-syshell__screen {
+	flex: 1 1 0;
+	min-height: 0;
+	margin: 0;
+	padding: 0.55rem 0.65rem;
+	overflow-x: auto;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	overscroll-behavior: contain;
+	font-family: ui-monospace, "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+	font-size: 0.78rem;
+	line-height: 1.42;
+	white-space: pre-wrap;
+	word-break: break-all;
+	tab-size: 4;
+	background: #121212;
+	color: #d8d8d8;
+	border: none;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.tv-syshell__inputrow {
+	flex: 0 0 auto;
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.5rem 0.55rem;
+	background: #181818;
+}
+
+.tv-syshell__prompt {
+	flex: 0 0 auto;
+	color: #6bcc6b;
+	font-family: ui-monospace, Consolas, monospace;
+	font-size: 0.74rem;
+	white-space: nowrap;
+	max-width: 38vw;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.tv-syshell__input {
+	flex: 1 1 auto;
+	min-width: 0;
+	font-family: ui-monospace, Consolas, monospace;
+	font-size: 0.8rem;
+	padding: 0.5rem 0.55rem;
+	border-radius: 6px;
+	border: 1px solid rgba(255, 255, 255, 0.18);
+	background: #0a0a0a;
+	color: #f2f2f2;
+	touch-action: manipulation;
+}
+
+.tv-syshell__input:focus {
+	outline: 2px solid rgba(107, 150, 255, 0.45);
+	outline-offset: 0;
+	border-color: rgba(107, 150, 255, 0.5);
+}
+
+.tv-syshell__warn {
+	flex: 0 0 auto;
+	flex-shrink: 0;
+	margin: 0;
+	padding: 0.3rem 0.55rem;
+	font-size: 0.66rem;
+	color: rgba(255, 210, 140, 0.92);
+	background: rgba(0, 0, 0, 0.4);
+	line-height: 1.35;
+}
+
+@media screen and (max-width: 768px) {
+	.tv-tools.tv-tools--shell-focus .tv-tools__main {
+		margin: 0;
+	}
+}

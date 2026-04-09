@@ -1,0 +1,6 @@
+# TV-Tools — 自用 ADB 目标（uci set / commit 后生效）
+config tv 'main'
+	option host '192.168.8.223'
+	option port '5555'
+	option cap_auto_refresh '1'
+	option cap_interval_ms '2000'
