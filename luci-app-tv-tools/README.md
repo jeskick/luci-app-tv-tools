@@ -23,6 +23,6 @@ sh /usr/bin/tv-tools-uninstall.sh
   - `tvtools-template3.txt`
   - `vgeo-universal-overlay.yaml` 及其备份
   - `openclash_custom_overwrite.sh.bak.tvtools`
-- 若检测到 `openclash_custom_overwrite.sh` 含 `TVTOOLS_VGEO` 注入块，会自动移除注入块
+- 保留你已注入到 `openclash_custom_overwrite.sh` 的覆写内容，不会主动删除注入块
 
 > 注意：该脚本按“程序卸载”目标执行清理，执行前建议自行备份重要配置。

@@ -67,6 +67,17 @@ rm -rf /tmp/luci-modulecache /tmp/luci-indexcache /tmp/luci-sessions
 /etc/init.d/uhttpd restart
 ```
 
+## 卸载（彻底清理）
+
+路由器上可执行：
+
+```sh
+sh /usr/bin/tv-tools-uninstall.sh
+```
+
+清理内容包括插件文件、UCI 配置、缓存及 TV-Tools 生成的 OpenClash 临时/模板文件。
+注意：脚本不会删除你已经注入到 `openclash_custom_overwrite.sh` 的有效覆写内容。
+
 ## 常用运维命令
 
 检查 Web 服务：
