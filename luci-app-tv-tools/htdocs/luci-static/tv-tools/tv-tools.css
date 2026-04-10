@@ -1498,22 +1498,25 @@
 	}
 }
 
-/* ========== OpenClash-Tools 占位（仅样式，逻辑待实现） ========== */
-.tv-tools .tv-tools__panel[data-panel="openclash-tools"]:not([hidden]) {
-	display: flex !important;
+/* ========== OpenClash-Tools ========== */
+.tv-oc {
+	display: flex;
 	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	min-height: 14rem;
-	padding: 1.5rem 1rem 2rem;
-	box-sizing: border-box;
+	gap: 0.8rem;
 }
 
-.tv-tools .tv-tools__panel[data-panel="openclash-tools"] .tv-tools__hint {
+.tv-oc__toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.45rem 0.55rem;
+	align-items: center;
+}
+
+.tv-oc .tv-tools__hint {
 	margin: 0;
-	max-width: 26rem;
-	text-align: center;
-	padding: 1.1rem 1.35rem;
+	max-width: 52rem;
+	text-align: left;
+	padding: 0.75rem 0.9rem;
 	border: 1px dashed var(--tv-border-strong);
 	border-radius: var(--tv-radius);
 	background: rgba(0, 0, 0, 0.18);
@@ -1521,16 +1524,122 @@
 	color: var(--tv-muted);
 }
 
-@media screen and (max-width: 768px) {
-	.tv-tools .tv-tools__panel[data-panel="openclash-tools"]:not([hidden]) {
-		min-height: min(42vh, 18rem);
-		padding: 1rem 0.65rem 1.5rem;
-	}
+.tv-oc__editor-wrap {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+}
 
-	.tv-tools .tv-tools__panel[data-panel="openclash-tools"] .tv-tools__hint {
-		padding: 0.95rem 1rem;
-		font-size: 0.85rem;
-	}
+.tv-oc__editor-head {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+
+.tv-oc__editor-title {
+	font-size: 0.8rem;
+	color: var(--tv-muted);
+}
+
+.tv-oc__file-select {
+	flex: 1 1 auto;
+	min-width: 14rem;
+	max-width: 100%;
+	font: inherit;
+	font-size: 0.74rem;
+	padding: 0.24rem 0.4rem;
+	border-radius: 6px;
+	border: 1px solid var(--tv-border);
+	background: rgba(0, 0, 0, 0.28);
+	color: var(--tv-text);
+}
+
+.tv-oc__editor {
+	width: 100%;
+	min-height: 25.4rem;
+	padding: 0.6rem 0.7rem;
+	border-radius: 7px;
+	border: 1px solid var(--tv-border);
+	background: rgba(0, 0, 0, 0.28);
+	color: #d8e4ff;
+	font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+	font-size: 0.75rem;
+	line-height: 1.45;
+	resize: vertical;
+}
+
+.tv-oc__editor:focus {
+	outline: 2px solid rgba(107, 150, 255, 0.45);
+	outline-offset: 1px;
+	border-color: rgba(107, 150, 255, 0.7);
+}
+
+.tv-oc__editor-shell {
+	position: relative;
+}
+
+.tv-oc__editor-hl,
+.tv-oc__editor {
+	font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+	font-size: 0.75rem;
+	line-height: 1.45;
+	white-space: pre-wrap;
+	word-break: break-word;
+	tab-size: 4;
+}
+
+.tv-oc__editor-hl {
+	position: absolute;
+	inset: 0;
+	margin: 0;
+	padding: 0.6rem 0.7rem;
+	border-radius: 7px;
+	border: 1px solid transparent;
+	overflow: auto;
+	pointer-events: none;
+	color: #d8e4ff;
+}
+
+.tv-oc__editor {
+	position: relative;
+	background: rgba(0, 0, 0, 0.28);
+	color: transparent;
+	caret-color: #d8e4ff;
+	-webkit-text-fill-color: transparent;
+}
+
+.tv-oc__editor::selection {
+	background: rgba(107, 150, 255, 0.35);
+}
+
+.tv-oc__tok-key {
+	color: #8ec7ff;
+}
+.tv-oc__tok-comment {
+	color: #7aa27f;
+}
+.tv-oc__tok-str {
+	color: #d9c38f;
+}
+.tv-oc__tok-num {
+	color: #d6a4ff;
+}
+.tv-oc__tok-kw {
+	color: #ffb4b4;
+}
+
+.tv-oc__inject-btn {
+	background: rgba(220, 72, 72, 0.38);
+	border-color: rgba(255, 120, 120, 0.78);
+	color: #ffecec;
+}
+
+.tv-oc__inject-btn:hover {
+	background: rgba(235, 78, 78, 0.5);
+	border-color: rgba(255, 150, 150, 0.95);
+	color: #fff;
 }
 
 /* ========== Syshell：路由器 shell（满屏终端区，隐藏底部全局日志） ========== */

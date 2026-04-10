@@ -15,16 +15,19 @@ tv.apps_refresh_url = pcdata(disp.build_url("admin", "services", "tv-tools", "ap
 tv.apps_install_url = pcdata(disp.build_url("admin", "services", "tv-tools", "apps", "install"))
 tv.syshell_banner_url = pcdata(disp.build_url("admin", "services", "tv-tools", "syshell", "banner"))
 tv.syshell_exec_url = pcdata(disp.build_url("admin", "services", "tv-tools", "syshell", "exec"))
+tv.oc_inject_url = pcdata(disp.build_url("admin", "services", "tv-tools", "openclash", "inject"))
+tv.oc_script_get_url = pcdata(disp.build_url("admin", "services", "tv-tools", "openclash", "script_get"))
+tv.oc_script_save_url = pcdata(disp.build_url("admin", "services", "tv-tools", "openclash", "script_save"))
 local cap_auto = uci:get("tv_tools", "main", "cap_auto_refresh") or "1"
 local cap_itv = uci:get("tv_tools", "main", "cap_interval_ms") or "2000"
-tv.css = pcdata('/luci-static/tv-tools/tv-tools.css?v=3.8')
-tv.js = pcdata('/luci-static/tv-tools/tv-tools.js?v=2.7')
+tv.css = pcdata('/luci-static/tv-tools/tv-tools.css?v=4.5')
+tv.js = pcdata('/luci-static/tv-tools/tv-tools.js?v=3.2')
 %>
 <%+header%>
 
 <link rel="stylesheet" type="text/css" href="<%=tv.css%>" />
 
-<div id="tv-tools-app" class="tv-tools" data-adb-url="<%=tv.adb_url%>" data-tvinfo-url="<%=tv.tvinfo_url%>" data-textinput-url="<%=tv.textinput_url%>" data-screencap-url="<%=tv.screencap_url%>" data-screencap-cfg-url="<%=tv.screencap_cfg_url%>" data-cap-auto-refresh="<%=pcdata(cap_auto)%>" data-cap-interval-ms="<%=pcdata(cap_itv)%>" data-capture-url="<%=tv.capture_url%>" data-apps-list-url="<%=tv.apps_list_url%>" data-apps-uninstall-url="<%=tv.apps_uninstall_url%>" data-apps-refresh-url="<%=tv.apps_refresh_url%>" data-apps-install-url="<%=tv.apps_install_url%>" data-syshell-banner-url="<%=tv.syshell_banner_url%>" data-syshell-exec-url="<%=tv.syshell_exec_url%>">
+<div id="tv-tools-app" class="tv-tools" data-adb-url="<%=tv.adb_url%>" data-tvinfo-url="<%=tv.tvinfo_url%>" data-textinput-url="<%=tv.textinput_url%>" data-screencap-url="<%=tv.screencap_url%>" data-screencap-cfg-url="<%=tv.screencap_cfg_url%>" data-cap-auto-refresh="<%=pcdata(cap_auto)%>" data-cap-interval-ms="<%=pcdata(cap_itv)%>" data-capture-url="<%=tv.capture_url%>" data-apps-list-url="<%=tv.apps_list_url%>" data-apps-uninstall-url="<%=tv.apps_uninstall_url%>" data-apps-refresh-url="<%=tv.apps_refresh_url%>" data-apps-install-url="<%=tv.apps_install_url%>" data-syshell-banner-url="<%=tv.syshell_banner_url%>" data-syshell-exec-url="<%=tv.syshell_exec_url%>" data-openclash-inject-url="<%=tv.oc_inject_url%>" data-openclash-script-get-url="<%=tv.oc_script_get_url%>" data-openclash-script-save-url="<%=tv.oc_script_save_url%>">
 	<!-- 第一行：仅标签切换 -->
 	<header class="tv-tools__top tv-tools__top--tabs">
 		<nav class="tv-tools__tabs" role="tablist" aria-label="TV-Tools 功能分区">
@@ -160,7 +163,24 @@ tv.js = pcdata('/luci-static/tv-tools/tv-tools.js?v=2.7')
 			</div>
 		</section>
 		<section class="tv-tools__panel" data-panel="openclash-tools" role="tabpanel" hidden>
-			<p class="tv-tools__hint">OpenClash-Tools：覆写、策略与优化相关设置（待实现）。</p>
+			<div class="tv-oc">
+				<div class="tv-oc__editor-wrap">
+					<div class="tv-oc__editor-head">
+						<label class="tv-oc__editor-title" for="tv-oc-file-target">编辑文件</label>
+						<select id="tv-oc-file-target" class="tv-oc__file-select">
+							<option value="openclash_default">openclash-default-overwrite.sh</option>
+							<option value="base_rules">vgeo-universal-overlay.yaml</option>
+							<option value="user_template">tvtools-template3.txt</option>
+						</select>
+						<button type="button" class="tv-tools__btn" id="tv-oc-save-script">保存代码</button>
+						<button type="button" class="tv-tools__btn tv-oc__inject-btn" id="tv-oc-inject">注入</button>
+					</div>
+					<div class="tv-oc__editor-shell">
+						<pre id="tv-oc-script-editor-hl" class="tv-oc__editor-hl" aria-hidden="true"></pre>
+						<textarea id="tv-oc-script-editor" class="tv-oc__editor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+					</div>
+				</div>
+			</div>
 		</section>
 		<section class="tv-tools__panel tv-tools__panel--syshell" data-panel="syshell" role="tabpanel" hidden aria-label="路由器 Shell">
 			<div class="tv-syshell" id="tv-syshell-root">

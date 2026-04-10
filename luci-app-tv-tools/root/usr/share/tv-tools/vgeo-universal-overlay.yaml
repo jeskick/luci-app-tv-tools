@@ -1,0 +1,132 @@
+# =============================================================================
+# VGEO 通用覆写 — 仅针对当前主线 Mihomo 内核与官方合并语义（Clash Verge / OpenClash）
+# =============================================================================
+# 能力：prepend-proxy-groups、prepend-rules、include-all-proxies、filter、exclude-filter
+# 组名前缀 VGEO-，避免与订阅内默认策略组冲突。
+# =============================================================================
+
+prepend-proxy-groups:
+  - name: VGEO-MEDIA-Unlock
+    type: url-test
+    include-all-proxies: true
+    exclude-filter: '(?i)(回国|大陆|国内|中国直连|China\s*Direct|CN\s*Direct|仅国内|本土直连|\bDIRECT\b|校园|教育|测速)'
+    filter: '(?i)(解锁|流媒体|Stream|Streaming|NF|Netflix|奈飞|迪士尼|Disney|HBO|H\+|Max\b|Hulu|DPlus|TikTok|抖音国际|Bahamut|动画疯|Spotify|Prime|Amazon|Video|TVB|MyTV|解锁专线|媒体|专线|隧道|中继|IEPL|IPLC|BGP|家宽|原生|ZJ|LT|CM|流媒体)'
+    url: http://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 80
+    lazy: true
+
+  - name: VGEO-MEDIA-Intl
+    type: url-test
+    include-all-proxies: true
+    exclude-filter: '(?i)(回国|大陆|国内|中国直连|China\s*Direct|CN\s*Direct|仅国内|本土直连|\bDIRECT\b|校园|教育|测速)'
+    url: http://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 80
+    lazy: true
+
+  - name: VGEO-MEDIA-tactics
+    type: fallback
+    proxies:
+      - VGEO-MEDIA-Unlock
+      - VGEO-MEDIA-Intl
+    url: http://www.gstatic.com/generate_204
+    interval: 180
+    lazy: true
+
+  - name: VGEO-AI-Unlock
+    type: url-test
+    include-all-proxies: true
+    exclude-filter: '(?i)(回国|大陆|国内|中国直连|China\s*Direct|CN\s*Direct|仅国内|本土直连|\bDIRECT\b|校园|教育|测速)'
+    filter: '(?i)(AI|GPT|ChatGPT|OpenAI|Claude|Anthropic|Gemini|人工智能|智谱|通义|文心|讯飞|解锁.*AI|AI.*解锁)'
+    url: http://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 80
+    lazy: true
+
+  - name: VGEO-AI-Intl
+    type: url-test
+    include-all-proxies: true
+    exclude-filter: '(?i)(回国|大陆|国内|中国直连|China\s*Direct|CN\s*Direct|仅国内|本土直连|\bDIRECT\b|校园|教育|测速)'
+    url: http://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 80
+    lazy: true
+
+  - name: VGEO-AI-tactics
+    type: fallback
+    proxies:
+      - VGEO-AI-Unlock
+      - VGEO-AI-Intl
+    url: http://www.gstatic.com/generate_204
+    interval: 180
+    lazy: true
+
+  - name: VGEO-YT-BestLatency
+    type: url-test
+    include-all-proxies: true
+    exclude-filter: '(?i)(回国|大陆直连|国内直连|中国直连|China\s*Direct|CN\s*Direct|仅国内|本土直连|\bDIRECT\b|No\s*Proxy|BLOCK|NULL|REJECT)'
+    url: http://www.gstatic.com/generate_204
+    interval: 600
+    tolerance: 120
+    lazy: true
+
+prepend-rules:
+  - DOMAIN-SUFFIX,youtube.com,VGEO-YT-BestLatency
+  - DOMAIN-SUFFIX,youtu.be,VGEO-YT-BestLatency
+  - DOMAIN-SUFFIX,ytimg.com,VGEO-YT-BestLatency
+  - DOMAIN-SUFFIX,googlevideo.com,VGEO-YT-BestLatency
+  - DOMAIN-SUFFIX,gvt1.com,VGEO-YT-BestLatency
+  - DOMAIN-SUFFIX,gvt2.com,VGEO-YT-BestLatency
+  - DOMAIN-KEYWORD,youtube,VGEO-YT-BestLatency
+
+  - DOMAIN-SUFFIX,netflix.com,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,netflix.net,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,nflxvideo.net,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,nflxso.net,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,nflximg.net,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,disneyplus.com,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,disney-plus.net,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,dssott.com,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,disney.com,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,hbomax.com,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,hbo.com,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,max.com,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,hbonow.com,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,hbogo.com,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,tiktok.com,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,tiktokv.com,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,ttlivecdn.com,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,muscdn.com,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,byteoversea.com,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,snssdk.com,VGEO-MEDIA-tactics
+  - DOMAIN-KEYWORD,netflix,VGEO-MEDIA-tactics
+  - DOMAIN-KEYWORD,disney,VGEO-MEDIA-tactics
+  - DOMAIN-KEYWORD,hbomax,VGEO-MEDIA-tactics
+  - DOMAIN-KEYWORD,tiktok,VGEO-MEDIA-tactics
+
+  - DOMAIN-SUFFIX,openai.com,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,chatgpt.com,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,oaistatic.com,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,oaiusercontent.com,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,anthropic.com,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,claude.ai,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,browser-intake-datadoghq.com,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,intercom.io,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,intercomcdn.com,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,ai.com,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,perplexity.ai,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,pplx.ai,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,cursor.com,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,cursor.sh,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,cursorapi.com,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,openrouter.ai,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,generativelanguage.googleapis.com,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,aisandbox-pa.googleapis.com,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,aiplatform.googleapis.com,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,notebooklm.google.com,VGEO-AI-tactics
+  - DOMAIN,gemini.google.com,VGEO-AI-tactics
+  - DOMAIN,ai.google.dev,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,makersuite.google.com,VGEO-AI-tactics
+  - DOMAIN-KEYWORD,openai,VGEO-AI-tactics
+  - DOMAIN-KEYWORD,anthropic,VGEO-AI-tactics

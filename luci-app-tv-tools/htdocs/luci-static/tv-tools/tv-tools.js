@@ -6,6 +6,7 @@
 
 	var tvAppsTabEnter = null;
 	var tvSyshellEnter = null;
+	var tvOpenclashTabEnter = null;
 
 	function logLine(msg) {
 		var el = document.getElementById("tv-tools-log");
@@ -510,6 +511,9 @@
 				}
 				if (name === "apps" && tvAppsTabEnter) {
 					tvAppsTabEnter();
+				}
+				if (name === "openclash-tools" && tvOpenclashTabEnter) {
+					tvOpenclashTabEnter();
 				}
 			});
 		}
@@ -1086,6 +1090,285 @@
 		}
 	}
 
+	function initOpenclashTools(root) {
+		var injectUrl = root.getAttribute("data-openclash-inject-url") || "";
+		var scriptGetUrl = root.getAttribute("data-openclash-script-get-url") || "";
+		var scriptSaveUrl = root.getAttribute("data-openclash-script-save-url") || "";
+		var btnInject = document.getElementById("tv-oc-inject");
+		var btnSaveScript = document.getElementById("tv-oc-save-script");
+		var editor = document.getElementById("tv-oc-script-editor");
+		var editorHl = document.getElementById("tv-oc-script-editor-hl");
+		var targetSel = document.getElementById("tv-oc-file-target");
+		if (!btnInject || !btnSaveScript || !editor || !editorHl || !targetSel) return;
+
+		var busy = false;
+		var loadedOnce = false;
+		function setBusy(v) {
+			busy = !!v;
+			btnInject.disabled = busy;
+			btnSaveScript.disabled = busy;
+			editor.disabled = busy;
+			targetSel.disabled = busy;
+		}
+		function targetLabel(v) {
+			if (v === "openclash_default") return "openclash-default-overwrite.sh";
+			if (v === "base_rules") return "vgeo-universal-overlay.yaml";
+			if (v === "user_template") return "tvtools-template3.txt";
+			return "openclash_custom_overwrite.sh";
+		}
+		function escHtml(s) {
+			return String(s == null ? "" : s)
+				.replace(/&/g, "&amp;")
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;");
+		}
+		function highlightShell(text) {
+			var lines = String(text || "").split("\n");
+			var out = [];
+			for (var i = 0; i < lines.length; i++) {
+				var l = lines[i];
+				var cidx = l.indexOf("#");
+				var code = cidx >= 0 ? l.slice(0, cidx) : l;
+				var cmt = cidx >= 0 ? l.slice(cidx) : "";
+				var h = escHtml(code)
+					.replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, '<span class="tv-oc__tok-str">$1</span>')
+					.replace(/\b(if|then|else|elif|fi|for|in|do|done|case|esac|while|until|function|return|exit|local)\b/g, '<span class="tv-oc__tok-kw">$1</span>')
+					.replace(/\b(\d+)\b/g, '<span class="tv-oc__tok-num">$1</span>');
+				if (cmt) h += '<span class="tv-oc__tok-comment">' + escHtml(cmt) + "</span>";
+				out.push(h);
+			}
+			return out.join("\n");
+		}
+		function highlightYaml(text) {
+			var lines = String(text || "").split("\n");
+			var out = [];
+			for (var i = 0; i < lines.length; i++) {
+				var l = lines[i];
+				if (/^\s*#/.test(l)) {
+					out.push('<span class="tv-oc__tok-comment">' + escHtml(l) + "</span>");
+					continue;
+				}
+				var h = escHtml(l)
+					.replace(/^(\s*[- ]*)([A-Za-z0-9_.-]+)(\s*:)/, '$1<span class="tv-oc__tok-key">$2</span>$3')
+					.replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, '<span class="tv-oc__tok-str">$1</span>')
+					.replace(/\b(true|false|null)\b/gi, '<span class="tv-oc__tok-kw">$1</span>')
+					.replace(/\b(\d+)\b/g, '<span class="tv-oc__tok-num">$1</span>');
+				out.push(h);
+			}
+			return out.join("\n");
+		}
+		function renderHighlight() {
+			var txt = editor.value || "";
+			var t = targetSel.value || "";
+			var html;
+			if (t === "openclash_default") html = highlightShell(txt);
+			else if (t === "base_rules") html = highlightYaml(txt);
+			else html = highlightShell(txt);
+			editorHl.innerHTML = html + "\n";
+			editorHl.scrollTop = editor.scrollTop;
+			editorHl.scrollLeft = editor.scrollLeft;
+		}
+		function postAction(url, actionLabel) {
+			if (!url) {
+				logLine(actionLabel + ": URL 未配置");
+				return Promise.resolve();
+			}
+			if (busy) return Promise.resolve();
+			setBusy(true);
+			var tok = getLuciToken();
+			var body = tok ? "token=" + encodeURIComponent(tok) : "";
+			var t0 = Date.now();
+			logLine("OpenClash-Tools: " + actionLabel + " 开始");
+			return fetch(url, {
+				method: "POST",
+				credentials: "same-origin",
+				headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+				body: body,
+			})
+				.then(function (r) {
+					logHttpMeta("OpenClash-Tools " + actionLabel, r, Date.now() - t0);
+					return r.text().then(function (text) {
+						var j;
+						try {
+							j = JSON.parse(text);
+						} catch (e) {
+							j = { ok: false, err: "非 JSON", raw: text };
+						}
+						return j;
+					});
+				})
+				.then(function (j) {
+					logDetail("OpenClash-Tools " + actionLabel + " 响应", j);
+					if (j && j.ok) {
+						logLine("OpenClash-Tools: " + actionLabel + " 成功" + (j.msg ? " | " + j.msg : ""));
+					} else {
+						logLine("OpenClash-Tools: " + actionLabel + " 失败 — " + (j && j.err ? j.err : "?"));
+					}
+				})
+				.catch(function (e) {
+					logLine("OpenClash-Tools: " + actionLabel + " 异常 | " + (e && e.message ? e.message : e));
+				})
+				.finally(function () {
+					setBusy(false);
+				});
+		}
+
+		function loadScript(forceRuntime) {
+			if (!scriptGetUrl) {
+				logLine("OpenClash-Tools: 脚本读取 URL 未配置");
+				return Promise.resolve();
+			}
+			if (busy) return Promise.resolve();
+			setBusy(true);
+			var tok = getLuciToken();
+			var target = forceRuntime ? "" : targetSel.value || "";
+			var q = target ? "target=" + encodeURIComponent(target) : "";
+			if (tok) q += (q ? "&" : "") + "token=" + encodeURIComponent(tok);
+			var sep = scriptGetUrl.indexOf("?") >= 0 ? "&" : "?";
+			var url = q ? scriptGetUrl + sep + q : scriptGetUrl;
+			var t0 = Date.now();
+			logLine("OpenClash-Tools: 读取 " + targetLabel(target || "openclash_runtime"));
+			return fetch(url, { method: "GET", credentials: "same-origin" })
+				.then(function (r) {
+					logHttpMeta("OpenClash-Tools 读取脚本", r, Date.now() - t0);
+					return r.text().then(function (text) {
+						var j;
+						try {
+							j = JSON.parse(text);
+						} catch (e) {
+							j = { ok: false, err: "非 JSON", raw: text };
+						}
+						return j;
+					});
+				})
+				.then(function (j) {
+					if (j && j.ok) {
+						editor.value = j.content || "";
+						logLine("OpenClash-Tools: 已加载 " + targetLabel(j.target || target || "openclash_runtime"));
+						renderHighlight();
+					} else {
+						logLine("OpenClash-Tools: 读取失败 — " + (j && j.err ? j.err : "?"));
+					}
+				})
+				.catch(function (e) {
+					logLine("OpenClash-Tools: 读取异常 | " + (e && e.message ? e.message : e));
+				})
+				.finally(function () {
+					setBusy(false);
+				});
+		}
+
+		function saveScript() {
+			if (!scriptSaveUrl) {
+				logLine("OpenClash-Tools: 脚本保存 URL 未配置");
+				return Promise.resolve();
+			}
+			if (busy) return Promise.resolve();
+			setBusy(true);
+			var tok = getLuciToken();
+			var body = "content=" + encodeURIComponent(editor.value || "");
+			if (tok) body += "&token=" + encodeURIComponent(tok);
+			var t0 = Date.now();
+			logLine("OpenClash-Tools: 保存到 tvtools-template3.txt");
+			return fetch(scriptSaveUrl, {
+				method: "POST",
+				credentials: "same-origin",
+				headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+				body: body,
+			})
+				.then(function (r) {
+					logHttpMeta("OpenClash-Tools 保存脚本", r, Date.now() - t0);
+					return r.text().then(function (text) {
+						var j;
+						try {
+							j = JSON.parse(text);
+						} catch (e) {
+							j = { ok: false, err: "非 JSON", raw: text };
+						}
+						return j;
+					});
+				})
+				.then(function (j) {
+					if (j && j.ok) {
+						targetSel.value = "user_template";
+						logLine("OpenClash-Tools: 已保存到 tvtools-template3.txt" + (j.size != null ? " | " + j.size + " bytes" : ""));
+					} else {
+						logLine("OpenClash-Tools: 保存失败 — " + (j && j.err ? j.err : "?"));
+					}
+				})
+				.catch(function (e) {
+					logLine("OpenClash-Tools: 保存异常 | " + (e && e.message ? e.message : e));
+				})
+				.finally(function () {
+					setBusy(false);
+				});
+		}
+
+		btnInject.addEventListener("click", function () {
+			if (!confirm("确认注入当前选择模板到 OpenClash？")) return;
+			if (!injectUrl) {
+				logLine("OpenClash-Tools: 注入 URL 未配置");
+				return;
+			}
+			if (busy) return;
+			setBusy(true);
+			var tok = getLuciToken();
+			var target = targetSel.value || "user_template";
+			var body = "target=" + encodeURIComponent(target);
+			if (tok) body += "&token=" + encodeURIComponent(tok);
+			var t0 = Date.now();
+			logLine("OpenClash-Tools: 注入开始 | 模板=" + targetLabel(target));
+			fetch(injectUrl, {
+				method: "POST",
+				credentials: "same-origin",
+				headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+				body: body,
+			})
+				.then(function (r) {
+					logHttpMeta("OpenClash-Tools 注入", r, Date.now() - t0);
+					return r.text().then(function (text) {
+						var j;
+						try {
+							j = JSON.parse(text);
+						} catch (e) {
+							j = { ok: false, err: "非 JSON", raw: text };
+						}
+						return j;
+					});
+				})
+				.then(function (j) {
+					logDetail("OpenClash-Tools 注入 响应", j);
+					if (j && j.ok) logLine("OpenClash-Tools: 注入成功");
+					else logLine("OpenClash-Tools: 注入失败 — " + (j && j.err ? j.err : "?"));
+				})
+				.catch(function (e) {
+					logLine("OpenClash-Tools: 注入异常 | " + (e && e.message ? e.message : e));
+				})
+				.finally(function () {
+					setBusy(false);
+				});
+		});
+		btnSaveScript.addEventListener("click", function () {
+			saveScript();
+		});
+		targetSel.addEventListener("change", function () {
+			loadScript();
+		});
+		editor.addEventListener("input", renderHighlight);
+		editor.addEventListener("scroll", function () {
+			editorHl.scrollTop = editor.scrollTop;
+			editorHl.scrollLeft = editor.scrollLeft;
+		});
+
+		tvOpenclashTabEnter = function () {
+			if (!loadedOnce) {
+				loadedOnce = true;
+				targetSel.value = "openclash_default";
+				loadScript(true);
+			}
+		};
+	}
+
 	function initTvInfo(root) {
 		var url = root.getAttribute("data-tvinfo-url") || "";
 		var dl = document.getElementById("tv-base-dl");
@@ -1273,6 +1556,7 @@
 		initTextInput(root);
 		initTvInfo(root);
 		initAppsPanel(root);
+		initOpenclashTools(root);
 		logLine("TV-Tools: 界面已加载 | 路径 " + (location.pathname || "") + (location.search || ""));
 	}
 

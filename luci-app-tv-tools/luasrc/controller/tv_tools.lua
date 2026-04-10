@@ -1303,6 +1303,492 @@ function syshell_exec()
 	http.write_json({ ok = true, out = out, cwd = newcwd })
 end
 
+local OC_CUSTOM_DIR = "/etc/openclash/custom"
+local OC_OVERWRITE = OC_CUSTOM_DIR .. "/openclash_custom_overwrite.sh"
+local OC_OVERWRITE_BAK = OC_CUSTOM_DIR .. "/openclash_custom_overwrite.sh.bak.tvtools"
+local OC_OVERLAY = OC_CUSTOM_DIR .. "/vgeo-universal-overlay.yaml"
+local OC_OVERLAY_BAK = OC_CUSTOM_DIR .. "/vgeo-universal-overlay.yaml.bak.tvtools"
+local OC_DEFAULT_OVERWRITE_TEMPLATE = "/usr/share/tv-tools/openclash-default-overwrite.sh"
+local OC_OVERLAY_TEMPLATE = "/usr/share/tv-tools/vgeo-universal-overlay.yaml"
+local OC_USER_TEMPLATE = OC_CUSTOM_DIR .. "/tvtools-template3.txt"
+local OC_MARK_BEGIN = "# >>> TVTOOLS_VGEO_BEGIN >>>"
+local OC_MARK_END = "# <<< TVTOOLS_VGEO_END <<<"
+
+local OC_DEFAULT_SCRIPT = [[#!/bin/sh
+. /usr/share/openclash/ruby.sh
+. /usr/share/openclash/log.sh
+. /lib/functions.sh
+
+# This script is called by /etc/init.d/openclash
+# Add your custom overwrite scripts here, they will be take effict after the OpenClash own srcipts
+
+LOG_TIP "Start Running Custom Overwrite Scripts..."
+LOGTIME=$(echo $(date "+%Y-%m-%d %H:%M:%S"))
+LOG_FILE="/tmp/openclash.log"
+#Config Path
+CONFIG_FILE="$1"
+
+    #Simple Demo:
+    #Key Overwrite Demo
+    #1--config path
+    #2--key name
+    #3--value
+    #ruby_edit "$CONFIG_FILE" "['redir-port']" "7892"
+    #ruby_edit "$CONFIG_FILE" "['secret']" "123456"
+    #ruby_edit "$CONFIG_FILE" "['dns']['enable']" "true"
+    #ruby_edit "$CONFIG_FILE" "['dns']['proxy-server-nameserver']" "['https://doh.pub/dns-query','https://223.5.5.5:443/dns-query']"
+
+    #Hash Overwrite Demo
+    #1--config path
+    #2--key name
+    #3--hash type value
+    #ruby_edit "$CONFIG_FILE" "['dns']['nameserver-policy']" "{'+.msftconnecttest.com'=>'114.114.114.114', '+.msftncsi.com'=>'114.114.114.114', 'geosite:gfw'=>['https://dns.cloudflare.com/dns-query', 'https://dns.google/dns-query#ecs=1.1.1.1/24&ecs-override=true'], 'geosite:cn'=>['114.114.114.114'], 'geosite:geolocation-!cn'=>['https://dns.cloudflare.com/dns-query', 'https://dns.google/dns-query#ecs=1.1.1.1/24&ecs-override=true']}"
+    #ruby_edit "$CONFIG_FILE" "['sniffer']" "{'enable'=>true, 'parse-pure-ip'=>true, 'force-domain'=>['+.netflix.com', '+.nflxvideo.net', '+.amazonaws.com', '+.media.dssott.com'], 'skip-domain'=>['+.apple.com', 'Mijia Cloud', 'dlg.io.mi.com', '+.oray.com', '+.sunlogin.net'], 'sniff'=>{'TLS'=>nil, 'HTTP'=>{'ports'=>[80, '8080-8880'], 'override-destination'=>true}}}"
+
+    #Map Edit Demo
+    #1--config path
+    #2--map name
+    #3--key name
+    #4--sub key name
+    #5--value
+    #ruby_map_edit "$CONFIG_FILE" "['proxy-providers']" "HK" "['url']" "http://test.com"
+
+    #Hash Merge Demo
+    #1--config path
+    #2--key name
+    #3--hash
+    #ruby_merge_hash "$CONFIG_FILE" "['proxy-providers']" "'TW'=>{'type'=>'http', 'path'=>'./proxy_provider/TW.yaml', 'url'=>'https://gist.githubusercontent.com/raw/tw_clash', 'interval'=>3600, 'health-check'=>{'enable'=>true, 'url'=>'http://cp.cloudflare.com/generate_204', 'interval'=>300}}"
+    #ruby_merge_hash "$CONFIG_FILE" "['rule-providers']" "'Reject'=>{'type'=>'http', 'behavior'=>'classical', 'url'=>'https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/refs/heads/master/Clash/Apple.list', 'path'=>'./rule_provider/Apple.list', 'interval'=>86400}"
+
+    #Array Edit Demo
+    #1--config path
+    #2--key name
+    #3--match key name
+    #4--match key value
+    #5--target key name
+    #6--target key value
+    #ruby_arr_edit "$CONFIG_FILE" "['proxy-groups']" "['name']" "Proxy" "['type']" "smart"
+    #ruby_arr_edit "$CONFIG_FILE" "['dns']['nameserver']" "" "114.114.114.114" "" "119.29.29.29"
+
+    #Array Insert Value Demo:
+    #1--config path
+    #2--key name
+    #3--position(start from 0, end with -1)
+    #4--value
+    #ruby_arr_insert "$CONFIG_FILE" "['dns']['nameserver']" "0" "114.114.114.114"
+
+    #Array Insert Hash Demo:
+    #1--config path
+    #2--key name
+    #3--position(start from 0, end with -1)
+    #4--hash
+    #ruby_arr_insert_hash "$CONFIG_FILE" "['proxy-groups']" "0" "{'name'=>'Disney', 'type'=>'select', 'disable-udp'=>false, 'use'=>['TW', 'SG', 'HK']}"
+    #ruby_arr_insert_hash "$CONFIG_FILE" "['proxies']" "0" "{'name'=>'HKG 01', 'type'=>'ss', 'server'=>'cc.hd.abc', 'port'=>'12345', 'cipher'=>'aes-128-gcm', 'password'=>'123456', 'udp'=>true, 'plugin'=>'obfs', 'plugin-opts'=>{'mode'=>'http', 'host'=>'microsoft.com'}}"
+    #ruby_arr_insert_hash "$CONFIG_FILE" "['listeners']" "0" "{'name'=>'name', 'type'=>'shadowsocks', 'port'=>'12345', 'listen'=>'0.0.0.0', 'rule'=>'sub-rule-1', 'proxy'=>'proxy'}"
+
+    #Array Insert Other Array Demo:
+    #1--config path
+    #2--key name
+    #3--position(start from 0, end with -1)
+    #4--array
+    #ruby_arr_insert_arr "$CONFIG_FILE" "['dns']['proxy-server-nameserver']" "0" "['https://doh.pub/dns-query','https://223.5.5.5:443/dns-query']"
+
+    #Array Insert From Yaml File Demo:
+    #1--config path
+    #2--key name
+    #3--position(start from 0, end with -1)
+    #4--value file path
+    #5--value key name in #4 file
+    #ruby_arr_add_file "$CONFIG_FILE" "['dns']['fallback-filter']['ipcidr']" "0" "/etc/openclash/custom/openclash_custom_fallback_filter.yaml" "['fallback-filter']['ipcidr']"
+
+    #Delete Array Value Demo:
+    #1--config path
+    #2--key name
+    #3--value
+    #ruby_delete "$CONFIG_FILE" "['dns']['nameserver']" "114.114.114.114"
+
+    #Delete Key Demo:
+    #1--config path
+    #2--key name
+    #3--key name
+    #ruby_delete "$CONFIG_FILE" "['dns']" "nameserver"
+    #ruby_delete "$CONFIG_FILE" "" "dns"
+
+    #Ruby Script Demo:
+    #ruby -ryaml -rYAML -I "/usr/share/openclash" -E UTF-8 -e "
+    #   begin
+    #      Value = YAML.load_file('$CONFIG_FILE');
+    #   rescue Exception => e
+    #      puts '${LOGTIME} [error] Load File Failed,【' + e.message + '】';
+    #   end;
+
+        #General
+    #   begin
+    #   Thread.new{
+    #      Value['redir-port']=7892;
+    #      Value['tproxy-port']=7895;
+    #      Value['port']=7890;
+    #      Value['socks-port']=7891;
+    #      Value['mixed-port']=7893;
+    #   }.join;
+
+    #   rescue Exception => e
+    #      puts '${LOGTIME} [error] Set General Failed,【' + e.message + '】';
+    #   ensure
+    #      File.open('$CONFIG_FILE','w') {|f| YAML.dump(Value, f)};
+    #   end" 2>/dev/null >> $LOG_FILE
+
+exit 0
+]]
+
+local OC_INJECT_BLOCK = [[
+]] .. OC_MARK_BEGIN .. [[
+ruby -ryaml -rYAML -I "/usr/share/openclash" -E UTF-8 -e "
+begin
+  cfg = YAML.load_file('$CONFIG_FILE') || {}
+  ov  = YAML.load_file('/etc/openclash/custom/vgeo-universal-overlay.yaml') || {}
+  cfg['proxy-groups'] ||= []
+  cfg['rules'] ||= []
+  pg = ov['prepend-proxy-groups'] || []
+  pr = ov['prepend-rules'] || []
+  cfg['proxy-groups'] = pg + cfg['proxy-groups']
+  cfg['rules'] = pr + cfg['rules']
+  File.open('$CONFIG_FILE','w') {|f| YAML.dump(cfg, f)}
+rescue Exception => e
+  puts '${LOGTIME} [error] Merge VGEO Overlay Failed,【' + e.message + '】'
+end
+" 2>/dev/null >> $LOG_FILE
+]] .. OC_MARK_END .. [[
+]]
+
+local function require_auth_json(http, disp)
+	http.prepare_content("application/json")
+	if not disp.context or not disp.context.authsession then
+		http.status(403, "Forbidden")
+		http.write_json({ ok = false, err = "not authenticated" })
+		return false
+	end
+	return true
+end
+
+local function write_file(path, content)
+	local f = io.open(path, "w")
+	if not f then
+		return false
+	end
+	f:write(content or "")
+	f:close()
+	return true
+end
+
+local function read_file(path)
+	local f = io.open(path, "r")
+	if not f then
+		return nil
+	end
+	local c = f:read("*a")
+	f:close()
+	return c
+end
+
+local function load_overlay_template()
+	local s = read_file(OC_OVERLAY_TEMPLATE)
+	if type(s) ~= "string" or trim_exec(s) == "" then
+		return nil
+	end
+	return s
+end
+
+local function load_default_overwrite_template()
+	local s = read_file(OC_DEFAULT_OVERWRITE_TEMPLATE)
+	if type(s) ~= "string" or trim_exec(s) == "" then
+		return OC_DEFAULT_SCRIPT
+	end
+	-- 兼容历史短版模板：若缺少常见注释示例块，则使用内置完整模板
+	if not s:find("Key Overwrite Demo", 1, true) or not s:find("Hash Overwrite Demo", 1, true) then
+		return OC_DEFAULT_SCRIPT
+	end
+	return s
+end
+
+local function overlay_placeholder_text()
+	return [[# VGEO overlay 模板未找到
+# 期望文件: /usr/share/tv-tools/vgeo-universal-overlay.yaml
+#
+# 说明：
+# - 你当前看到这段文字，是因为路由器上尚未安装模板文件，或安装路径不完整。
+# - 可先点击“注入”（若系统中已有模板会写入运行文件），或重新安装包含该模板的 tv-tools 包。
+# - 你也可以直接在此编辑后保存到「运行 overlay」目标文件。
+]]
+end
+
+local function openclash_target_path(target)
+	target = tostring(target or "")
+	if target == "openclash_default" then
+		return "openclash_default", OC_DEFAULT_OVERWRITE_TEMPLATE, nil
+	elseif target == "base_rules" then
+		return "base_rules", OC_OVERLAY_TEMPLATE, nil
+	elseif target == "user_template" then
+		return "user_template", OC_USER_TEMPLATE, ""
+	end
+	return nil, nil, nil
+end
+
+local function ensure_dir(path)
+	os.execute("mkdir -p '" .. tostring(path):gsub("'", "") .. "' >/dev/null 2>&1")
+end
+
+local function ensure_parent_dir(path)
+	local p = tostring(path or "")
+	local d = p:match("^(.*)/[^/]+$")
+	if d and d ~= "" then
+		ensure_dir(d)
+	end
+end
+
+local function backup_once(src, bak)
+	if nixio.fs.access(src) and not nixio.fs.access(bak) then
+		os.execute("cp -f '" .. src:gsub("'", "") .. "' '" .. bak:gsub("'", "") .. "' >/dev/null 2>&1")
+	end
+end
+
+local function inject_block_into_script(script)
+	if not script or script == "" then
+		script = OC_DEFAULT_SCRIPT
+	end
+	local p1 = script:find(OC_MARK_BEGIN, 1, true)
+	local p2 = script:find(OC_MARK_END, 1, true)
+	if p1 and p2 and p2 > p1 then
+		local eol = script:find("\n", p2, true) or #script
+		local before = script:sub(1, p1 - 1):gsub("%s+$", "")
+		local after = script:sub(eol + 1):gsub("^%s+", "")
+		local merged = before .. "\n\n" .. OC_INJECT_BLOCK .. "\n\n" .. after
+		return merged
+	end
+	local pos_exit = script:find("\nexit%s+0%s*$")
+	if pos_exit then
+		return script:sub(1, pos_exit - 1):gsub("%s+$", "") .. "\n\n" .. OC_INJECT_BLOCK .. "\n\nexit 0\n"
+	end
+	return script:gsub("%s+$", "") .. "\n\n" .. OC_INJECT_BLOCK .. "\n\nexit 0\n"
+end
+
+function openclash_backup()
+	local http = require "luci.http"
+	local disp = require "luci.dispatcher"
+	if not require_auth_json(http, disp) then
+		return
+	end
+	if http.getenv("REQUEST_METHOD") ~= "POST" then
+		http.status(405, "Method Not Allowed")
+		http.write_json({ ok = false, err = "method" })
+		return
+	end
+	http.formvalue("token")
+	ensure_dir(OC_CUSTOM_DIR)
+	if not nixio.fs.access(OC_OVERWRITE) then
+		write_file(OC_OVERWRITE, OC_DEFAULT_SCRIPT)
+	end
+	os.execute("cp -f '" .. OC_OVERWRITE:gsub("'", "") .. "' '" .. OC_OVERWRITE_BAK:gsub("'", "") .. "' >/dev/null 2>&1")
+	if nixio.fs.access(OC_OVERLAY) then
+		os.execute("cp -f '" .. OC_OVERLAY:gsub("'", "") .. "' '" .. OC_OVERLAY_BAK:gsub("'", "") .. "' >/dev/null 2>&1")
+	end
+	http.write_json({
+		ok = true,
+		msg = "OpenClash 覆写文件已备份",
+		files = { overwrite = OC_OVERWRITE_BAK, overlay = OC_OVERLAY_BAK },
+	})
+end
+
+function openclash_restore_default()
+	local http = require "luci.http"
+	local disp = require "luci.dispatcher"
+	if not require_auth_json(http, disp) then
+		return
+	end
+	if http.getenv("REQUEST_METHOD") ~= "POST" then
+		http.status(405, "Method Not Allowed")
+		http.write_json({ ok = false, err = "method" })
+		return
+	end
+	http.formvalue("token")
+	ensure_dir(OC_CUSTOM_DIR)
+	local restored = false
+	if nixio.fs.access(OC_OVERWRITE_BAK) then
+		os.execute("cp -f '" .. OC_OVERWRITE_BAK:gsub("'", "") .. "' '" .. OC_OVERWRITE:gsub("'", "") .. "' >/dev/null 2>&1")
+		restored = true
+	else
+		write_file(OC_OVERWRITE, OC_DEFAULT_SCRIPT)
+	end
+	if nixio.fs.access(OC_OVERLAY_BAK) then
+		os.execute("cp -f '" .. OC_OVERLAY_BAK:gsub("'", "") .. "' '" .. OC_OVERLAY:gsub("'", "") .. "' >/dev/null 2>&1")
+	else
+		pcall(os.remove, OC_OVERLAY)
+	end
+	http.write_json({
+		ok = true,
+		msg = restored and "已从备份恢复 OpenClash 覆写" or "已恢复为默认覆写脚本",
+		files = { overwrite = OC_OVERWRITE, overlay = OC_OVERLAY },
+	})
+end
+
+function openclash_inject()
+	local http = require "luci.http"
+	local disp = require "luci.dispatcher"
+	if not require_auth_json(http, disp) then
+		return
+	end
+	if http.getenv("REQUEST_METHOD") ~= "POST" then
+		http.status(405, "Method Not Allowed")
+		http.write_json({ ok = false, err = "method" })
+		return
+	end
+	http.formvalue("token")
+	local target = http.formvalue("target") or "user_template"
+	ensure_dir(OC_CUSTOM_DIR)
+	if not nixio.fs.access(OC_OVERWRITE) then
+		write_file(OC_OVERWRITE, OC_DEFAULT_SCRIPT)
+	end
+	backup_once(OC_OVERWRITE, OC_OVERWRITE_BAK)
+	backup_once(OC_OVERLAY, OC_OVERLAY_BAK)
+	local src_text = nil
+	if target == "openclash_default" then
+		src_text = load_default_overwrite_template()
+		if not write_file(OC_OVERWRITE, src_text) then
+			http.write_json({ ok = false, err = "写入 overwrite 脚本失败: " .. OC_OVERWRITE })
+			return
+		end
+	elseif target == "base_rules" then
+		src_text = load_overlay_template()
+		if not src_text then
+			http.write_json({ ok = false, err = "缺少 overlay 模板文件: " .. OC_OVERLAY_TEMPLATE })
+			return
+		end
+		if not write_file(OC_OVERLAY, src_text) then
+			http.write_json({ ok = false, err = "写入 overlay 文件失败: " .. OC_OVERLAY })
+			return
+		end
+		local script = read_file(OC_OVERWRITE) or OC_DEFAULT_SCRIPT
+		local merged = inject_block_into_script(script)
+		if not write_file(OC_OVERWRITE, merged) then
+			http.write_json({ ok = false, err = "写入 overwrite 脚本失败: " .. OC_OVERWRITE })
+			return
+		end
+	else
+		src_text = read_file(OC_USER_TEMPLATE)
+		if not src_text or trim_exec(src_text) == "" then
+			http.write_json({ ok = false, err = "模板3为空，请先保存代码到模板3" })
+			return
+		end
+		if src_text:match("^#!%s*/bin/sh") or src_text:find("CONFIG_FILE=\"$1\"", 1, true) then
+			if not write_file(OC_OVERWRITE, src_text) then
+				http.write_json({ ok = false, err = "写入 overwrite 脚本失败: " .. OC_OVERWRITE })
+				return
+			end
+		else
+			if not write_file(OC_OVERLAY, src_text) then
+				http.write_json({ ok = false, err = "写入 overlay 文件失败: " .. OC_OVERLAY })
+				return
+			end
+			local script = read_file(OC_OVERWRITE) or OC_DEFAULT_SCRIPT
+			local merged = inject_block_into_script(script)
+			if not write_file(OC_OVERWRITE, merged) then
+				http.write_json({ ok = false, err = "写入 overwrite 脚本失败: " .. OC_OVERWRITE })
+				return
+			end
+		end
+	end
+	http.write_json({
+		ok = true,
+		msg = "注入完成（按当前下拉模板）",
+		target = target,
+		files = { overwrite = OC_OVERWRITE, overlay = OC_OVERLAY },
+	})
+end
+
+function openclash_script_get()
+	local http = require "luci.http"
+	local disp = require "luci.dispatcher"
+	if not require_auth_json(http, disp) then
+		return
+	end
+	if http.getenv("REQUEST_METHOD") ~= "GET" then
+		http.status(405, "Method Not Allowed")
+		http.write_json({ ok = false, err = "method" })
+		return
+	end
+	local target = http.formvalue("target")
+	local target_key, path, default_content = openclash_target_path(target)
+	if not target_key then
+		local content = read_file(OC_OVERWRITE)
+		if not content then
+			content = load_default_overwrite_template()
+		end
+		http.write_json({
+			ok = true,
+			target = "openclash_runtime",
+			path = OC_OVERWRITE,
+			content = content,
+			readonly = false,
+		})
+		return
+	end
+	local content = read_file(path)
+	if content == nil then
+		if target_key == "openclash_default" then
+			content = load_default_overwrite_template()
+		elseif target_key == "base_rules" then
+			content = load_overlay_template() or overlay_placeholder_text()
+		elseif target_key == "user_template" then
+			content = ""
+		else
+			content = default_content or ""
+		end
+	end
+	http.write_json({
+		ok = true,
+		target = target_key,
+		path = path,
+		content = content,
+		readonly = (target_key == "openclash_default" or target_key == "base_rules"),
+	})
+end
+
+function openclash_script_save()
+	local http = require "luci.http"
+	local disp = require "luci.dispatcher"
+	if not require_auth_json(http, disp) then
+		return
+	end
+	if http.getenv("REQUEST_METHOD") ~= "POST" then
+		http.status(405, "Method Not Allowed")
+		http.write_json({ ok = false, err = "method" })
+		return
+	end
+	http.formvalue("token")
+	local target_key, path = "user_template", OC_USER_TEMPLATE
+	local content = http.formvalue("content")
+	if type(content) ~= "string" then
+		http.write_json({ ok = false, err = "missing content" })
+		return
+	end
+	if #content > 512 * 1024 then
+		http.write_json({ ok = false, err = "content too large (>512KB)" })
+		return
+	end
+	ensure_parent_dir(path)
+	if not write_file(path, content) then
+		http.write_json({ ok = false, err = "写入失败: " .. path })
+		return
+	end
+	http.write_json({
+		ok = true,
+		msg = "已保存到模板3",
+		target = target_key,
+		path = path,
+		size = #content,
+	})
+end
+
 function index()
 	if not nixio.fs.access("/etc/config/luci") then
 		return
@@ -1320,6 +1806,11 @@ function index()
 	entry({ "admin", "services", "tv-tools", "apps", "install" }, call("apps_install_apk")).leaf = true
 	entry({ "admin", "services", "tv-tools", "syshell", "banner" }, call("syshell_banner")).leaf = true
 	entry({ "admin", "services", "tv-tools", "syshell", "exec" }, call("syshell_exec")).leaf = true
+	entry({ "admin", "services", "tv-tools", "openclash", "backup" }, call("openclash_backup")).leaf = true
+	entry({ "admin", "services", "tv-tools", "openclash", "restore_default" }, call("openclash_restore_default")).leaf = true
+	entry({ "admin", "services", "tv-tools", "openclash", "inject" }, call("openclash_inject")).leaf = true
+	entry({ "admin", "services", "tv-tools", "openclash", "script_get" }, call("openclash_script_get")).leaf = true
+	entry({ "admin", "services", "tv-tools", "openclash", "script_save" }, call("openclash_script_save")).leaf = true
 
 	local e = entry({ "admin", "services", "tv-tools" }, template("tv_tools/main"), _("TV-Tools"), 90)
 	e.dependent = true
