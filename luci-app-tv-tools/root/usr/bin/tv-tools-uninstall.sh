@@ -4,7 +4,7 @@
 #   sh /usr/bin/tv-tools-uninstall.sh
 # 说明:
 # - 清理 luci-app-tv-tools 的配置/缓存/静态文件/控制器/脚本
-# - 清理 TV-Tools 生成的 OpenClash 相关模板与注入块
+# - 清理 TV-Tools 生成的 OpenClash 相关模板与临时文件（不修改已注入覆写内容）
 # - 若检测到 opkg，则尝试卸载 luci-app-tv-tools 包（可失败，不中断清理）
 
 set -u
@@ -73,20 +73,6 @@ remove_path "/etc/openclash/custom/tvtools-template3.txt"
 remove_path "/etc/openclash/custom/vgeo-universal-overlay.yaml"
 remove_path "/etc/openclash/custom/vgeo-universal-overlay.yaml.bak.tvtools"
 remove_path "/etc/openclash/custom/openclash_custom_overwrite.sh.bak.tvtools"
-
-OC_OVERWRITE="/etc/openclash/custom/openclash_custom_overwrite.sh"
-if [ -f "$OC_OVERWRITE" ]; then
-	if grep -q ">>> TVTOOLS_VGEO_BEGIN >>>" "$OC_OVERWRITE" 2>/dev/null; then
-		# 删除注入块（从 begin 到 end）
-		sed '/>>> TVTOOLS_VGEO_BEGIN >>>/,/<<< TVTOOLS_VGEO_END <<</d' "$OC_OVERWRITE" > "${OC_OVERWRITE}.tmp.tvtools" 2>/dev/null || true
-		if [ -s "${OC_OVERWRITE}.tmp.tvtools" ]; then
-			mv -f "${OC_OVERWRITE}.tmp.tvtools" "$OC_OVERWRITE"
-			log "removed TVTOOLS_VGEO block from: $OC_OVERWRITE"
-		else
-			rm -f "${OC_OVERWRITE}.tmp.tvtools" 2>/dev/null || true
-		fi
-	fi
-fi
 
 # 6) 清理 LuCI 缓存并重载服务（不强依赖）
 remove_path "/tmp/luci-indexcache"
