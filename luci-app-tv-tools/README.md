@@ -20,8 +20,8 @@ sh /usr/bin/tv-tools-uninstall.sh
 - 插件控制器、视图、静态资源、ADB 辅助脚本
 - TV-Tools 运行缓存（截图、临时文件、LuCI 缓存）
 - TV-Tools 产生的 OpenClash 文件：
-  - `tvtools-template3.txt`
   - `vgeo-universal-overlay.yaml` 及其备份
+  - `openclash-default-overwrite.local.sh`（可选，覆盖包内默认覆写示例）
   - `openclash_custom_overwrite.sh.bak.tvtools`
 - 保留你已注入到 `openclash_custom_overwrite.sh` 的覆写内容，不会主动删除注入块
 

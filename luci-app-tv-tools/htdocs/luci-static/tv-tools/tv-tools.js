@@ -1099,21 +1099,28 @@
 		var editor = document.getElementById("tv-oc-script-editor");
 		var editorHl = document.getElementById("tv-oc-script-editor-hl");
 		var targetSel = document.getElementById("tv-oc-file-target");
+		var chkRestart = document.getElementById("tv-oc-restart");
 		if (!btnInject || !btnSaveScript || !editor || !editorHl || !targetSel) return;
 
 		var busy = false;
 		var loadedOnce = false;
-		function setBusy(v) {
-			busy = !!v;
+		function syncOcEditorChrome() {
+			var noSave = targetSel.value === "base_rules";
+			btnSaveScript.disabled = busy || noSave;
 			btnInject.disabled = busy;
-			btnSaveScript.disabled = busy;
 			editor.disabled = busy;
 			targetSel.disabled = busy;
+			if (chkRestart) chkRestart.disabled = busy;
+		}
+		function setBusy(v) {
+			busy = !!v;
+			syncOcEditorChrome();
 		}
 		function targetLabel(v) {
 			if (v === "openclash_default") return "openclash-default-overwrite.sh";
-			if (v === "base_rules") return "vgeo-universal-overlay.yaml";
-			if (v === "user_template") return "tvtools-template3.txt";
+			if (v === "base_rules") return "VGEO 整份覆写";
+			if (v === "vgeo_yaml") return "vgeo-universal-overlay.yaml";
+			if (v === "runtime") return "openclash_custom_overwrite.sh（运行中）";
 			return "openclash_custom_overwrite.sh";
 		}
 		function escHtml(s) {
@@ -1161,8 +1168,8 @@
 			var txt = editor.value || "";
 			var t = targetSel.value || "";
 			var html;
-			if (t === "openclash_default") html = highlightShell(txt);
-			else if (t === "base_rules") html = highlightYaml(txt);
+			if (t === "openclash_default" || t === "base_rules" || t === "runtime") html = highlightShell(txt);
+			else if (t === "vgeo_yaml") html = highlightYaml(txt);
 			else html = highlightShell(txt);
 			editorHl.innerHTML = html + "\n";
 			editorHl.scrollTop = editor.scrollTop;
@@ -1244,7 +1251,8 @@
 				.then(function (j) {
 					if (j && j.ok) {
 						editor.value = j.content || "";
-						logLine("OpenClash-Tools: 已加载 " + targetLabel(j.target || target || "openclash_runtime"));
+						editor.readOnly = false;
+						logLine("OpenClash-Tools: 已加载 " + targetLabel(j.target || target || "runtime"));
 						renderHighlight();
 					} else {
 						logLine("OpenClash-Tools: 读取失败 — " + (j && j.err ? j.err : "?"));
@@ -1266,10 +1274,14 @@
 			if (busy) return Promise.resolve();
 			setBusy(true);
 			var tok = getLuciToken();
-			var body = "content=" + encodeURIComponent(editor.value || "");
+			var body =
+				"target=" +
+				encodeURIComponent(targetSel.value || "runtime") +
+				"&content=" +
+				encodeURIComponent(editor.value || "");
 			if (tok) body += "&token=" + encodeURIComponent(tok);
 			var t0 = Date.now();
-			logLine("OpenClash-Tools: 保存到 tvtools-template3.txt");
+			logLine("OpenClash-Tools: 保存 | 目标=" + targetLabel(targetSel.value || ""));
 			return fetch(scriptSaveUrl, {
 				method: "POST",
 				credentials: "same-origin",
@@ -1290,8 +1302,7 @@
 				})
 				.then(function (j) {
 					if (j && j.ok) {
-						targetSel.value = "user_template";
-						logLine("OpenClash-Tools: 已保存到 tvtools-template3.txt" + (j.size != null ? " | " + j.size + " bytes" : ""));
+						logLine("OpenClash-Tools: " + (j.msg || "已保存") + (j.size != null ? " | " + j.size + " bytes" : ""));
 					} else {
 						logLine("OpenClash-Tools: 保存失败 — " + (j && j.err ? j.err : "?"));
 					}
@@ -1313,9 +1324,14 @@
 			if (busy) return;
 			setBusy(true);
 			var tok = getLuciToken();
-			var target = targetSel.value || "user_template";
-			var body = "target=" + encodeURIComponent(target);
+			var target = targetSel.value || "runtime";
+			var body =
+				"target=" +
+				encodeURIComponent(target) +
+				"&content=" +
+				encodeURIComponent(editor.value || "");
 			if (tok) body += "&token=" + encodeURIComponent(tok);
+			if (chkRestart && chkRestart.checked) body += "&restart=1";
 			var t0 = Date.now();
 			logLine("OpenClash-Tools: 注入开始 | 模板=" + targetLabel(target));
 			fetch(injectUrl, {
@@ -1338,8 +1354,22 @@
 				})
 				.then(function (j) {
 					logDetail("OpenClash-Tools 注入 响应", j);
-					if (j && j.ok) logLine("OpenClash-Tools: 注入成功");
-					else logLine("OpenClash-Tools: 注入失败 — " + (j && j.err ? j.err : "?"));
+					if (j && j.ok) {
+						logLine("OpenClash-Tools: 注入成功");
+						if (j.files && j.files.overwrite) {
+							logLine("OpenClash-Tools: 生效覆写脚本 → " + j.files.overwrite);
+						}
+						if (j.hints && j.hints.length) {
+							for (var hi = 0; hi < j.hints.length; hi++) {
+								logLine("OpenClash-Tools: " + j.hints[hi]);
+							}
+						}
+						if (j.inject_verified) {
+							logLine("OpenClash-Tools: 已校验磁盘脚本含 TVTOOLS 注入标记");
+						}
+					} else {
+						logLine("OpenClash-Tools: 注入失败 — " + (j && j.err ? j.err : "?"));
+					}
 				})
 				.catch(function (e) {
 					logLine("OpenClash-Tools: 注入异常 | " + (e && e.message ? e.message : e));
@@ -1363,8 +1393,8 @@
 		tvOpenclashTabEnter = function () {
 			if (!loadedOnce) {
 				loadedOnce = true;
-				targetSel.value = "openclash_default";
-				loadScript(true);
+				targetSel.value = "runtime";
+				loadScript();
 			}
 		};
 	}

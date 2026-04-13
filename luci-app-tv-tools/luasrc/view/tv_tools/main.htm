@@ -20,8 +20,8 @@ tv.oc_script_get_url = pcdata(disp.build_url("admin", "services", "tv-tools", "o
 tv.oc_script_save_url = pcdata(disp.build_url("admin", "services", "tv-tools", "openclash", "script_save"))
 local cap_auto = uci:get("tv_tools", "main", "cap_auto_refresh") or "1"
 local cap_itv = uci:get("tv_tools", "main", "cap_interval_ms") or "2000"
-tv.css = pcdata('/luci-static/tv-tools/tv-tools.css?v=4.5')
-tv.js = pcdata('/luci-static/tv-tools/tv-tools.js?v=3.2')
+tv.css = pcdata('/luci-static/tv-tools/tv-tools.css?v=4.7')
+tv.js = pcdata('/luci-static/tv-tools/tv-tools.js?v=3.3')
 %>
 <%+header%>
 
@@ -31,11 +31,11 @@ tv.js = pcdata('/luci-static/tv-tools/tv-tools.js?v=3.2')
 	<!-- 第一行：仅标签切换 -->
 	<header class="tv-tools__top tv-tools__top--tabs">
 		<nav class="tv-tools__tabs" role="tablist" aria-label="TV-Tools 功能分区">
-			<button type="button" class="tv-tools__tab is-active" data-tab="home-tv" role="tab" aria-selected="true">首页-TV</button>
-			<button type="button" class="tv-tools__tab" data-tab="apps" role="tab" aria-selected="false">应用管理</button>
-			<button type="button" class="tv-tools__tab" data-tab="screenshot" role="tab" aria-selected="false">屏幕快照</button>
-			<button type="button" class="tv-tools__tab" data-tab="openclash-tools" role="tab" aria-selected="false">OpenClash-Tools</button>
-			<button type="button" class="tv-tools__tab" data-tab="syshell" role="tab" aria-selected="false">Syshell</button>
+			<button type="button" class="tv-tools__tab is-active" data-tab="home-tv" role="tab" aria-selected="true">TV</button>
+			<button type="button" class="tv-tools__tab" data-tab="apps" role="tab" aria-selected="false">Apps</button>
+			<button type="button" class="tv-tools__tab" data-tab="screenshot" role="tab" aria-selected="false">Disp</button>
+			<button type="button" class="tv-tools__tab" data-tab="openclash-tools" role="tab" aria-selected="false">Tools</button>
+			<button type="button" class="tv-tools__tab" data-tab="syshell" role="tab" aria-selected="false">Shell</button>
 		</nav>
 	</header>
 
@@ -125,7 +125,7 @@ tv.js = pcdata('/luci-static/tv-tools/tv-tools.js?v=3.2')
 							<tr>
 								<th class="tv-apps__th-pkg">包名</th>
 								<th class="tv-apps__th-note">说明</th>
-								<th class="tv-apps__th-path">完整路径</th>
+								<th class="tv-apps__th-path">路径</th>
 								<th class="tv-apps__th-act">操作</th>
 							</tr>
 						</thead>
@@ -168,12 +168,14 @@ tv.js = pcdata('/luci-static/tv-tools/tv-tools.js?v=3.2')
 					<div class="tv-oc__editor-head">
 						<label class="tv-oc__editor-title" for="tv-oc-file-target">编辑文件</label>
 						<select id="tv-oc-file-target" class="tv-oc__file-select">
-							<option value="openclash_default">openclash-default-overwrite.sh</option>
-							<option value="base_rules">vgeo-universal-overlay.yaml</option>
-							<option value="user_template">tvtools-template3.txt</option>
+						<option value="runtime">运行中（openclash_custom_overwrite.sh）</option>
+						<option value="vgeo_yaml">规则 YAML（vgeo-universal-overlay.yaml，可保存）</option>
+						<option value="openclash_default">默认覆写模板（可保存为 .local）</option>
+						<option value="base_rules">VGEO 整份覆写（母版只读）</option>
 						</select>
-						<button type="button" class="tv-tools__btn" id="tv-oc-save-script">保存代码</button>
+						<button type="button" class="tv-tools__btn" id="tv-oc-save-script">保存</button>
 						<button type="button" class="tv-tools__btn tv-oc__inject-btn" id="tv-oc-inject">注入</button>
+						<label class="tv-oc__restart-label"><input type="checkbox" id="tv-oc-restart" /> 注入重启</label>
 					</div>
 					<div class="tv-oc__editor-shell">
 						<pre id="tv-oc-script-editor-hl" class="tv-oc__editor-hl" aria-hidden="true"></pre>
@@ -209,7 +211,7 @@ tv.js = pcdata('/luci-static/tv-tools/tv-tools.js?v=3.2')
 	<!-- 底部：本插件全局操作日志 -->
 	<footer class="tv-tools__log">
 		<div class="tv-tools__log-head">
-			<span>全局日志（所有标签共用）</span>
+			<span>操作日志</span>
 			<button type="button" class="tv-tools__btn tv-tools__btn--ghost" id="tv-tools-log-clear">清空</button>
 		</div>
 		<pre class="tv-tools__log-body" id="tv-tools-log" aria-live="polite"></pre>

@@ -70,8 +70,10 @@ remove_glob "/tmp/tvt_apk_*.apk"
 
 # 5) 清理 OpenClash 相关（仅 TV-Tools 产物）
 remove_path "/etc/openclash/custom/tvtools-template3.txt"
+remove_path "/etc/openclash/custom/openclash-default-overwrite.local.sh"
 remove_path "/etc/openclash/custom/vgeo-universal-overlay.yaml"
 remove_path "/etc/openclash/custom/vgeo-universal-overlay.yaml.bak.tvtools"
+remove_path "/etc/openclash/custom/vgeo-openclash-overwrite.sh"
 remove_path "/etc/openclash/custom/openclash_custom_overwrite.sh.bak.tvtools"
 
 # 6) 清理 LuCI 缓存并重载服务（不强依赖）

@@ -205,13 +205,6 @@
 	overflow-y: visible;
 }
 
-.tv-tools__hint {
-	color: var(--tv-muted);
-	font-size: 0.9rem;
-	margin: 0 0 0.75rem;
-	line-height: 1.5;
-}
-
 .tv-tools__list {
 	margin: 0;
 	padding-left: 1.25rem;
@@ -261,8 +254,8 @@
 
 .tv-tools__log-body {
 	flex: 0 1 auto;
-	/* 至少 8 行正文：8×line-height×font-size + 上下 padding */
-	min-height: calc(8 * 1.45 * 0.78rem + 0.6rem + 0.6rem);
+	/* 至少 6 行正文：6×line-height×font-size + 上下 padding */
+	min-height: calc(6 * 1.45 * 0.78rem + 0.6rem + 0.6rem);
 	display: block;
 	width: 100%;
 	box-sizing: border-box;
@@ -287,7 +280,7 @@
 	font: inherit;
 	cursor: pointer;
 	border-radius: 6px;
-	border: 1px solid var(--tv-border);
+	border: 1px solid var(--tv-border-strong);
 	padding: 0.25rem 0.6rem;
 	font-size: 0.75rem;
 }
@@ -302,9 +295,24 @@
 	border-color: rgba(107, 150, 255, 0.45);
 }
 
-/* 与 Argon 等主题并存时，弱化 Luci 默认段落边距 */
-.tv-tools .tv-tools__main > .tv-tools__panel:first-child .tv-tools__hint {
-	margin-top: 0;
+/* 确保在所有 LuCI 主题下按钮外观一致 */
+.tv-tools .tv-tools__btn {
+	background: rgba(255, 255, 255, 0.07);
+	color: var(--tv-text);
+	line-height: 1.3;
+	transition: background 0.12s, border-color 0.12s, color 0.12s;
+	-webkit-tap-highlight-color: rgba(107, 150, 255, 0.18);
+	touch-action: manipulation;
+}
+
+.tv-tools .tv-tools__btn:hover {
+	background: rgba(255, 255, 255, 0.14);
+	border-color: rgba(155, 175, 230, 0.55);
+}
+
+.tv-tools .tv-tools__btn:disabled {
+	opacity: 0.42;
+	cursor: not-allowed;
 }
 
 /* ========== 首页-TV：左信息 / 右遥控 ========== */
@@ -683,7 +691,7 @@
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 0.4rem 0.5rem;
-	margin-bottom: 0.55rem;
+	margin-bottom: 0.4rem;
 }
 
 .tv-apps__toolbar-spacer {
@@ -734,8 +742,8 @@
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 0.45rem 0.55rem;
-	margin-bottom: 0.6rem;
+	gap: 0.35rem 0.45rem;
+	margin-bottom: 0.45rem;
 }
 
 .tv-apps__quick-row {
@@ -743,7 +751,7 @@
 	grid-template-columns: minmax(0, 1fr) auto;
 	align-items: center;
 	column-gap: 0.45rem;
-	margin-bottom: 0.6rem;
+	margin-bottom: 0.45rem;
 	min-width: 0;
 }
 
@@ -1173,7 +1181,7 @@
 	}
 
 	.tv-tools__top--tabs .tv-tools__tabs {
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
 		justify-content: flex-start;
 		row-gap: 0.22rem;
 		column-gap: 0.22rem;
@@ -1189,11 +1197,11 @@
 	}
 
 	.tv-tools__main {
-		padding: 0.6rem 0.65rem;
+		padding: 0.55rem 0.6rem;
 	}
 
 	.tv-tools__main .tv-tools__panel--cap {
-		margin: -0.6rem -0.65rem;
+		margin: -0.55rem -0.6rem;
 	}
 
 	.tv-tools__list code {
@@ -1230,6 +1238,11 @@
 	.tv-apps__filter {
 		touch-action: manipulation;
 		-webkit-tap-highlight-color: rgba(107, 150, 255, 0.2);
+	}
+
+	.tv-apps__search {
+		max-width: 8rem;
+		flex: 0 1 auto;
 	}
 
 	.tv-apps__file-label {
@@ -1416,7 +1429,7 @@
 	}
 
 	.tv-tools__main {
-		padding: 0.62rem;
+		padding: 0.55rem;
 		border-radius: 10px;
 	}
 
@@ -1487,7 +1500,7 @@
 	}
 
 	.tv-tools__log-body {
-		min-height: calc(7 * 1.45 * 0.71rem + 0.35rem + 0.35rem);
+		min-height: calc(5 * 1.45 * 0.71rem + 0.35rem + 0.35rem);
 	}
 }
 
@@ -1502,7 +1515,7 @@
 .tv-oc {
 	display: flex;
 	flex-direction: column;
-	gap: 0.8rem;
+	gap: 0.55rem;
 }
 
 .tv-oc__toolbar {
@@ -1510,18 +1523,6 @@
 	flex-wrap: wrap;
 	gap: 0.45rem 0.55rem;
 	align-items: center;
-}
-
-.tv-oc .tv-tools__hint {
-	margin: 0;
-	max-width: 52rem;
-	text-align: left;
-	padding: 0.75rem 0.9rem;
-	border: 1px dashed var(--tv-border-strong);
-	border-radius: var(--tv-radius);
-	background: rgba(0, 0, 0, 0.18);
-	line-height: 1.55;
-	color: var(--tv-muted);
 }
 
 .tv-oc__editor-wrap {
@@ -1534,7 +1535,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: flex-start;
-	gap: 0.5rem;
+	gap: 0.4rem 0.45rem;
 	flex-wrap: wrap;
 }
 
@@ -1545,7 +1546,7 @@
 
 .tv-oc__file-select {
 	flex: 1 1 auto;
-	min-width: 14rem;
+	min-width: 10rem;
 	max-width: 100%;
 	font: inherit;
 	font-size: 0.74rem;
@@ -1640,6 +1641,74 @@
 	background: rgba(235, 78, 78, 0.5);
 	border-color: rgba(255, 150, 150, 0.95);
 	color: #fff;
+}
+
+.tv-oc__restart-label {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	font-size: 0.72rem;
+	color: var(--tv-muted);
+	cursor: pointer;
+	user-select: none;
+}
+
+.tv-oc__restart-label input {
+	margin: 0;
+	cursor: pointer;
+}
+
+/* ========== OpenClash-Tools 手机端优化 ========== */
+@media screen and (max-width: 768px) {
+	.tv-oc {
+		gap: 0.38rem;
+	}
+
+	.tv-oc__editor-wrap {
+		gap: 0.28rem;
+	}
+
+	.tv-oc__editor-head {
+		gap: 0.28rem 0.32rem;
+		align-items: center;
+	}
+
+	/* 手机端隐藏「编辑文件」标签，节省横向空间 */
+	.tv-oc__editor-title {
+		display: none;
+	}
+
+	/* 选择框占满一整行，排在最前 */
+	.tv-oc__file-select {
+		flex: 0 0 100%;
+		min-width: 0;
+		order: -1;
+		font-size: 0.73rem;
+		padding: 0.2rem 0.35rem;
+	}
+
+	/* 保存 / 注入按钮各占一份，并排显示 */
+	#tv-oc-save-script,
+	.tv-oc__inject-btn {
+		flex: 1 1 auto;
+		min-height: 1.95rem;
+	}
+
+	.tv-oc__restart-label {
+		font-size: 0.68rem;
+		flex: 0 0 auto;
+	}
+
+	/* 编辑器在手机端高度减半，避免超出屏幕 */
+	.tv-oc__editor,
+	.tv-oc__editor-hl {
+		font-size: 0.73rem;
+		line-height: 1.4;
+	}
+
+	.tv-oc__editor {
+		min-height: 15rem;
+	}
 }
 
 /* ========== Syshell：路由器 shell（满屏终端区，隐藏底部全局日志） ========== */
@@ -1771,5 +1840,23 @@
 @media screen and (max-width: 768px) {
 	.tv-tools.tv-tools--shell-focus .tv-tools__main {
 		margin: 0;
+	}
+}
+
+/* ========== 超窄屏（< 360px）最终兜底 ========== */
+@media screen and (max-width: 360px) {
+	.tv-tools__main {
+		padding: 0.45rem;
+	}
+
+	.tv-tools .tv-tools__tab {
+		min-width: 4.2rem;
+		font-size: 0.65rem;
+		padding: 0.2rem 0.36rem;
+		min-height: 1.7rem;
+	}
+
+	.tv-oc__editor {
+		min-height: 12rem;
 	}
 }

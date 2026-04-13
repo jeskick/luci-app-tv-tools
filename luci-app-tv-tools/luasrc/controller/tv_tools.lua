@@ -1309,10 +1309,25 @@ local OC_OVERWRITE_BAK = OC_CUSTOM_DIR .. "/openclash_custom_overwrite.sh.bak.tv
 local OC_OVERLAY = OC_CUSTOM_DIR .. "/vgeo-universal-overlay.yaml"
 local OC_OVERLAY_BAK = OC_CUSTOM_DIR .. "/vgeo-universal-overlay.yaml.bak.tvtools"
 local OC_DEFAULT_OVERWRITE_TEMPLATE = "/usr/share/tv-tools/openclash-default-overwrite.sh"
+local OC_DEFAULT_OVERWRITE_LOCAL = OC_CUSTOM_DIR .. "/openclash-default-overwrite.local.sh"
 local OC_OVERLAY_TEMPLATE = "/usr/share/tv-tools/vgeo-universal-overlay.yaml"
-local OC_USER_TEMPLATE = OC_CUSTOM_DIR .. "/tvtools-template3.txt"
+local OC_VGEO_FULL_TEMPLATE = "/usr/share/tv-tools/vgeo-openclash-overwrite.sh"
+local OC_VGEO_USER = OC_CUSTOM_DIR .. "/vgeo-openclash-overwrite.sh"
 local OC_MARK_BEGIN = "# >>> TVTOOLS_VGEO_BEGIN >>>"
 local OC_MARK_END = "# <<< TVTOOLS_VGEO_END <<<"
+
+local function is_tvtools_vgeo_embed_shell(s)
+	if type(s) ~= "string" or trim_exec(s) == "" then
+		return false
+	end
+	if s:find(OC_MARK_BEGIN, 1, true) then
+		return true
+	end
+	if s:match("^#!%s*/bin/sh") and s:find("TVTOOLS_EMBED_PATH", 1, true) then
+		return true
+	end
+	return false
+end
 
 local OC_DEFAULT_SCRIPT = [[#!/bin/sh
 . /usr/share/openclash/ruby.sh
@@ -1441,25 +1456,78 @@ CONFIG_FILE="$1"
 exit 0
 ]]
 
-local OC_INJECT_BLOCK = [[
-]] .. OC_MARK_BEGIN .. [[
-ruby -ryaml -rYAML -I "/usr/share/openclash" -E UTF-8 -e "
-begin
-  cfg = YAML.load_file('$CONFIG_FILE') || {}
-  ov  = YAML.load_file('/etc/openclash/custom/vgeo-universal-overlay.yaml') || {}
-  cfg['proxy-groups'] ||= []
-  cfg['rules'] ||= []
-  pg = ov['prepend-proxy-groups'] || []
-  pr = ov['prepend-rules'] || []
-  cfg['proxy-groups'] = pg + cfg['proxy-groups']
-  cfg['rules'] = pr + cfg['rules']
-  File.open('$CONFIG_FILE','w') {|f| YAML.dump(cfg, f)}
-rescue Exception => e
-  puts '${LOGTIME} [error] Merge VGEO Overlay Failed,【' + e.message + '】'
+-- 将 overlay 正文内嵌进覆写脚本（heredoc），运行时 cat 到 /tmp/…$$，Ruby 只读该临时文件；不依赖 /etc/openclash/custom/vgeo-universal-overlay.yaml 参与合并（该文件仍可写入供 TV-Tools 编辑）
+local OC_EMBED_ENV = "TVTOOLS_EMBED_PATH"
+
+local function build_oc_inject_block(overlay_body)
+	if type(overlay_body) ~= "string" or trim_exec(overlay_body) == "" then
+		return nil
+	end
+	local body = overlay_body:gsub("\r\n", "\n"):gsub("\r", "\n")
+	local delim = "TVTOOLS_VGEO_" .. tostring(nixio.getpid and nixio.getpid() or 0) .. "_" .. tostring(os.time()):gsub("%s+", "")
+	while body:find("\n" .. delim .. "\n", 1, true) or body:match("^" .. delim .. "\n") or body:match("\n" .. delim .. "$") do
+		delim = delim .. "X"
+	end
+	local parts = {
+		"\n",
+		OC_MARK_BEGIN,
+		"\n",
+		"export ",
+		OC_EMBED_ENV,
+		'="/tmp/tvtools_vgeo_embed.$$"\n',
+		"cat > \"$",
+		OC_EMBED_ENV,
+		"\" <<'",
+		delim,
+		"'\n",
+		body,
+		(body:match("\n$") and "" or "\n"),
+		delim,
+		"\n\n",
+		"ruby -ryaml -rYAML -I \"/usr/share/openclash\" -E UTF-8 -e \"\n",
+		"begin\n",
+		"  cfg = YAML.load_file('$CONFIG_FILE') || {}\n",
+		"  ov = YAML.load_file(ENV['",
+		OC_EMBED_ENV,
+		"']) || {}\n",
+		"  cfg['proxy-groups'] ||= []\n",
+		"  cfg['rules'] ||= []\n",
+		"  pg = ov['prepend-proxy-groups'] || []\n",
+		"  pr = ov['prepend-rules'] || []\n",
+		"  cfg['proxy-groups'] = pg + cfg['proxy-groups']\n",
+		"  cfg['rules'] = pr + cfg['rules']\n",
+		"  File.open('$CONFIG_FILE','w') {|f| YAML.dump(cfg, f)}\n",
+		"rescue Exception => e\n",
+		"  puts '${LOGTIME} [error] Merge VGEO Overlay Failed,【' + e.message + '】'\n",
+		"end\n",
+		"\" >> \"$LOG_FILE\" 2>&1\n",
+		OC_MARK_END,
+		"\n",
+	}
+	return table.concat(parts)
 end
-" 2>/dev/null >> $LOG_FILE
-]] .. OC_MARK_END .. [[
+
+-- 由 YAML 拼成「整份」覆写 shell（与默认母版注入方式一致：整文件写入 openclash_custom_overwrite.sh）
+local OC_VGEO_SHELL_HEAD = [[#!/bin/sh
+. /usr/share/openclash/ruby.sh
+. /usr/share/openclash/log.sh
+. /lib/functions.sh
+
+# TV-Tools VGEO 整份覆写：内嵌 YAML（heredoc）经 Ruby 合并进 CONFIG_FILE
+LOG_TIP "Start Running Custom Overwrite Scripts..."
+LOGTIME=$(echo $(date "+%Y-%m-%d %H:%M:%S"))
+LOG_FILE="/tmp/openclash.log"
+CONFIG_FILE="$1"
+
 ]]
+
+local function build_full_vgeo_overwrite_from_yaml(yaml_body)
+	local frag = build_oc_inject_block(yaml_body)
+	if not frag then
+		return nil
+	end
+	return OC_VGEO_SHELL_HEAD .. frag .. "exit 0\n"
+end
 
 local function require_auth_json(http, disp)
 	http.prepare_content("application/json")
@@ -1472,16 +1540,29 @@ local function require_auth_json(http, disp)
 end
 
 local function write_file(path, content)
+	local data = content or ""
+	if nixio and nixio.fs and type(nixio.fs.writefile) == "function" then
+		local ok = pcall(nixio.fs.writefile, path, data)
+		if ok and nixio.fs.access(path) then
+			return true
+		end
+	end
 	local f = io.open(path, "w")
 	if not f then
 		return false
 	end
-	f:write(content or "")
+	f:write(data)
 	f:close()
 	return true
 end
 
 local function read_file(path)
+	if nixio and nixio.fs and type(nixio.fs.readfile) == "function" then
+		local ok, data = pcall(nixio.fs.readfile, path)
+		if ok and type(data) == "string" then
+			return data
+		end
+	end
 	local f = io.open(path, "r")
 	if not f then
 		return nil
@@ -1500,6 +1581,10 @@ local function load_overlay_template()
 end
 
 local function load_default_overwrite_template()
+	local loc = read_file(OC_DEFAULT_OVERWRITE_LOCAL)
+	if type(loc) == "string" and trim_exec(loc) ~= "" then
+		return loc
+	end
 	local s = read_file(OC_DEFAULT_OVERWRITE_TEMPLATE)
 	if type(s) ~= "string" or trim_exec(s) == "" then
 		return OC_DEFAULT_SCRIPT
@@ -1524,12 +1609,17 @@ end
 
 local function openclash_target_path(target)
 	target = tostring(target or "")
-	if target == "openclash_default" then
-		return "openclash_default", OC_DEFAULT_OVERWRITE_TEMPLATE, nil
+	if target == "" then
+		target = "runtime"
+	end
+	if target == "runtime" then
+		return "runtime", OC_OVERWRITE, nil
+	elseif target == "openclash_default" then
+		return "openclash_default", OC_DEFAULT_OVERWRITE_LOCAL, nil
 	elseif target == "base_rules" then
-		return "base_rules", OC_OVERLAY_TEMPLATE, nil
-	elseif target == "user_template" then
-		return "user_template", OC_USER_TEMPLATE, ""
+		return "base_rules", OC_VGEO_FULL_TEMPLATE, nil
+	elseif target == "vgeo_yaml" then
+		return "vgeo_yaml", OC_OVERLAY, nil
 	end
 	return nil, nil, nil
 end
@@ -1552,24 +1642,12 @@ local function backup_once(src, bak)
 	end
 end
 
-local function inject_block_into_script(script)
-	if not script or script == "" then
-		script = OC_DEFAULT_SCRIPT
+local function oc_chmod_plus_x(path)
+	local p = tostring(path or ""):gsub("'", "")
+	if p == "" then
+		return
 	end
-	local p1 = script:find(OC_MARK_BEGIN, 1, true)
-	local p2 = script:find(OC_MARK_END, 1, true)
-	if p1 and p2 and p2 > p1 then
-		local eol = script:find("\n", p2, true) or #script
-		local before = script:sub(1, p1 - 1):gsub("%s+$", "")
-		local after = script:sub(eol + 1):gsub("^%s+", "")
-		local merged = before .. "\n\n" .. OC_INJECT_BLOCK .. "\n\n" .. after
-		return merged
-	end
-	local pos_exit = script:find("\nexit%s+0%s*$")
-	if pos_exit then
-		return script:sub(1, pos_exit - 1):gsub("%s+$", "") .. "\n\n" .. OC_INJECT_BLOCK .. "\n\nexit 0\n"
-	end
-	return script:gsub("%s+$", "") .. "\n\n" .. OC_INJECT_BLOCK .. "\n\nexit 0\n"
+	os.execute("chmod +x '" .. p .. "' >/dev/null 2>&1")
 end
 
 function openclash_backup()
@@ -1643,65 +1721,118 @@ function openclash_inject()
 		return
 	end
 	http.formvalue("token")
-	local target = http.formvalue("target") or "user_template"
+	local target = http.formvalue("target") or "runtime"
+	local posted = http.formvalue("content")
+	local has_post = type(posted) == "string" and trim_exec(posted) ~= ""
+	local editor_text = has_post and posted or nil
 	ensure_dir(OC_CUSTOM_DIR)
+	local inject_expect_mark = false
 	if not nixio.fs.access(OC_OVERWRITE) then
 		write_file(OC_OVERWRITE, OC_DEFAULT_SCRIPT)
 	end
 	backup_once(OC_OVERWRITE, OC_OVERWRITE_BAK)
 	backup_once(OC_OVERLAY, OC_OVERLAY_BAK)
-	local src_text = nil
-	if target == "openclash_default" then
-		src_text = load_default_overwrite_template()
-		if not write_file(OC_OVERWRITE, src_text) then
+	if target == "runtime" or target == "openclash_default" then
+		local shell = editor_text
+		if not shell or trim_exec(shell) == "" then
+			if target == "runtime" then
+				shell = read_file(OC_OVERWRITE) or load_default_overwrite_template()
+			else
+				shell = load_default_overwrite_template()
+			end
+		end
+		if not shell or trim_exec(shell) == "" then
+			http.write_json({ ok = false, err = "覆写脚本内容为空（文本框为空且无可用回退）" })
+			return
+		end
+		if not write_file(OC_OVERWRITE, shell) then
 			http.write_json({ ok = false, err = "写入 overwrite 脚本失败: " .. OC_OVERWRITE })
 			return
 		end
-	elseif target == "base_rules" then
-		src_text = load_overlay_template()
-		if not src_text then
-			http.write_json({ ok = false, err = "缺少 overlay 模板文件: " .. OC_OVERLAY_TEMPLATE })
+	elseif target == "base_rules" or target == "vgeo_yaml" then
+		local shell = editor_text
+		-- base_rules 页 GET 返回的是「已生成的整份 sh」；用户未改框就注入时 POST 仍是旧 sh。
+		-- 原逻辑遇 shebang 会跳过 YAML 重建且内容非空不再读母版，导致升级包内 vgeo-universal-overlay.yaml 永远不生效。
+		if shell and trim_exec(shell) ~= "" then
+			if shell:match("^#!%s*/bin/sh") or shell:find(OC_MARK_BEGIN, 1, true) or shell:find("TVTOOLS_EMBED_PATH", 1, true) then
+				shell = nil
+			end
+		end
+		if shell and trim_exec(shell) ~= "" then
+			if not shell:match("^#!%s*/bin/sh") and not shell:find(OC_MARK_BEGIN, 1, true) then
+				if shell:find("prepend%-proxy%-groups:", 1) or shell:find("prepend%-rules:", 1) then
+					shell = build_full_vgeo_overwrite_from_yaml(shell)
+				end
+			end
+		end
+		if not shell or trim_exec(shell) == "" then
+			if target == "base_rules" then
+				shell = read_file(OC_VGEO_USER)
+			else
+				shell = read_file(OC_OVERLAY)
+			end
+		end
+		-- 若曾点「保存」把整份嵌入 sh 写入 vgeo-openclash-overwrite.sh，此处会挡住母版回退，必须丢弃
+		if shell and is_tvtools_vgeo_embed_shell(shell) then
+			shell = nil
+		end
+		-- base_rules 注入不再读 /etc/.../vgeo-universal-overlay.yaml，避免历史副本永远盖住包内母版；改规则请用 vgeo_yaml 目标保存并注入。
+		if target == "vgeo_yaml" and shell and trim_exec(shell) ~= "" then
+			if not shell:match("^#!%s*/bin/sh") and not shell:find(OC_MARK_BEGIN, 1, true) then
+				if shell:find("prepend%-proxy%-groups:", 1) or shell:find("prepend%-rules:", 1) then
+					shell = build_full_vgeo_overwrite_from_yaml(shell)
+				end
+			end
+		end
+		if not shell or trim_exec(shell) == "" then
+			local y = load_overlay_template()
+			shell = y and build_full_vgeo_overwrite_from_yaml(y)
+		end
+		if not shell or trim_exec(shell) == "" then
+			http.write_json({ ok = false, err = "无法生成 VGEO 整份覆写（文本框为空且母版 yaml 不可用）: " .. OC_OVERLAY_TEMPLATE })
 			return
 		end
-		if not write_file(OC_OVERLAY, src_text) then
-			http.write_json({ ok = false, err = "写入 overlay 文件失败: " .. OC_OVERLAY })
-			return
-		end
-		local script = read_file(OC_OVERWRITE) or OC_DEFAULT_SCRIPT
-		local merged = inject_block_into_script(script)
-		if not write_file(OC_OVERWRITE, merged) then
+		if not write_file(OC_OVERWRITE, shell) then
 			http.write_json({ ok = false, err = "写入 overwrite 脚本失败: " .. OC_OVERWRITE })
 			return
 		end
+		inject_expect_mark = shell:find(OC_MARK_BEGIN, 1, true) ~= nil
 	else
-		src_text = read_file(OC_USER_TEMPLATE)
-		if not src_text or trim_exec(src_text) == "" then
-			http.write_json({ ok = false, err = "模板3为空，请先保存代码到模板3" })
+		http.write_json({ ok = false, err = "未知注入目标: " .. tostring(target) })
+		return
+	end
+	oc_chmod_plus_x(OC_OVERWRITE)
+	if inject_expect_mark then
+		local disk = read_file(OC_OVERWRITE)
+		if not disk or not disk:find(OC_MARK_BEGIN, 1, true) then
+			http.write_json({
+				ok = false,
+				err = "注入后校验失败：磁盘上的覆写脚本未包含 TVTOOLS 标记块。请在 SSH 执行: ls -la /etc/openclash/custom/openclash_custom_overwrite.sh; wc -c /etc/openclash/custom/openclash_custom_overwrite.sh; tail -n 30 /etc/openclash/custom/openclash_custom_overwrite.sh",
+			})
 			return
 		end
-		if src_text:match("^#!%s*/bin/sh") or src_text:find("CONFIG_FILE=\"$1\"", 1, true) then
-			if not write_file(OC_OVERWRITE, src_text) then
-				http.write_json({ ok = false, err = "写入 overwrite 脚本失败: " .. OC_OVERWRITE })
-				return
-			end
-		else
-			if not write_file(OC_OVERLAY, src_text) then
-				http.write_json({ ok = false, err = "写入 overlay 文件失败: " .. OC_OVERLAY })
-				return
-			end
-			local script = read_file(OC_OVERWRITE) or OC_DEFAULT_SCRIPT
-			local merged = inject_block_into_script(script)
-			if not write_file(OC_OVERWRITE, merged) then
-				http.write_json({ ok = false, err = "写入 overwrite 脚本失败: " .. OC_OVERWRITE })
-				return
-			end
-		end
+	end
+	local hints = {
+		"本次注入：文本框有有效 YAML 时以框内为准。VGEO「整份覆写」回退链用包内母版（不读 /etc 下 vgeo-universal-overlay.yaml）；「vgeo-universal-overlay.yaml」目标才用 /etc 副本。均整文件写入 openclash_custom_overwrite.sh（合并异常见 /tmp/openclash.log）。",
+		"本插件写入的覆写脚本是 " .. OC_OVERWRITE .. "（OpenClash 主流程会 source 该文件）。",
+		"LuCI「覆写设置」里 /etc/openclash/overwrite/ 下的条目（如 tvtools_vgeo.sh）是另一套：需单独打开开关才会执行，与上述路径不是同一个文件。",
+		"注入后若规则未立即变化：请在 OpenClash 中「应用配置」，或勾选「注入后重启 OpenClash」。",
+	}
+	local restart_req = http.formvalue("restart")
+	local restart_launched = false
+	if restart_req == "1" or restart_req == "true" then
+		os.execute("/etc/init.d/openclash restart >/dev/null 2>&1 &")
+		restart_launched = true
+		table.insert(hints, "已后台异步执行 /etc/init.d/openclash restart（可能有数秒断流）。")
 	end
 	http.write_json({
 		ok = true,
 		msg = "注入完成（按当前下拉模板）",
 		target = target,
 		files = { overwrite = OC_OVERWRITE, overlay = OC_OVERLAY },
+		hints = hints,
+		restart_openclash = restart_launched,
+		inject_verified = inject_expect_mark or nil,
 	})
 end
 
@@ -1716,41 +1847,70 @@ function openclash_script_get()
 		http.write_json({ ok = false, err = "method" })
 		return
 	end
-	local target = http.formvalue("target")
-	local target_key, path, default_content = openclash_target_path(target)
+	local raw = http.formvalue("target")
+	local target_key, path, default_content = openclash_target_path(raw)
 	if not target_key then
+		http.write_json({ ok = false, err = "unknown target" })
+		return
+	end
+	if target_key == "runtime" then
 		local content = read_file(OC_OVERWRITE)
 		if not content then
 			content = load_default_overwrite_template()
 		end
 		http.write_json({
 			ok = true,
-			target = "openclash_runtime",
+			target = "runtime",
 			path = OC_OVERWRITE,
-			content = content,
+			content = content or "",
 			readonly = false,
 		})
 		return
 	end
-	local content = read_file(path)
-	if content == nil then
-		if target_key == "openclash_default" then
-			content = load_default_overwrite_template()
-		elseif target_key == "base_rules" then
-			content = load_overlay_template() or overlay_placeholder_text()
-		elseif target_key == "user_template" then
-			content = ""
-		else
-			content = default_content or ""
-		end
+	if target_key == "openclash_default" then
+		local content = load_default_overwrite_template()
+		http.write_json({
+			ok = true,
+			target = "openclash_default",
+			path = OC_DEFAULT_OVERWRITE_LOCAL,
+			content = content or "",
+			readonly = false,
+		})
+		return
 	end
-	http.write_json({
-		ok = true,
-		target = target_key,
-		path = path,
-		content = content,
-		readonly = (target_key == "openclash_default" or target_key == "base_rules"),
-	})
+	if target_key == "vgeo_yaml" then
+		local content = read_file(OC_OVERLAY)
+		if not content or trim_exec(content) == "" then
+			content = load_overlay_template()
+		end
+		if not content or trim_exec(content) == "" then
+			content = overlay_placeholder_text()
+		end
+		http.write_json({
+			ok = true,
+			target = "vgeo_yaml",
+			path = OC_OVERLAY,
+			content = content or "",
+			readonly = false,
+		})
+		return
+	end
+	if target_key == "base_rules" then
+		local y = load_overlay_template()
+		local content = y and trim_exec(y) ~= "" and build_full_vgeo_overwrite_from_yaml(y)
+		if not content or trim_exec(content) == "" then
+			content = "# 未找到 VGEO 母版: " .. OC_OVERLAY_TEMPLATE .. "\nexit 0\n"
+		end
+		http.write_json({
+			ok = true,
+			target = "base_rules",
+			path = OC_VGEO_FULL_TEMPLATE,
+			content = content or "",
+			readonly = false,
+		})
+		return
+	end
+	http.write_json({ ok = false, err = "internal: unhandled target" })
 end
 
 function openclash_script_save()
@@ -1765,14 +1925,36 @@ function openclash_script_save()
 		return
 	end
 	http.formvalue("token")
-	local target_key, path = "user_template", OC_USER_TEMPLATE
+	local t = http.formvalue("target") or "runtime"
+	if t == "base_rules" then
+		http.write_json({ ok = false, err = "「VGEO 整份覆写」为包内母版预览，请选 vgeo-universal-overlay.yaml 保存规则" })
+		return
+	end
+	local path
+	local msg
+	if t == "runtime" then
+		path = OC_OVERWRITE
+		msg = "已保存到运行中覆写脚本"
+	elseif t == "base_rules" then
+		path = OC_VGEO_USER
+		msg = "已保存到 /etc/openclash/custom/vgeo-openclash-overwrite.sh"
+	elseif t == "vgeo_yaml" then
+		path = OC_OVERLAY
+		msg = "已保存到 /etc/openclash/custom/vgeo-universal-overlay.yaml"
+	elseif t == "openclash_default" then
+		path = OC_DEFAULT_OVERWRITE_LOCAL
+		msg = "已保存到 /etc/openclash/custom/openclash-default-overwrite.local.sh（优先于包内默认模板）"
+	else
+		http.write_json({ ok = false, err = "unknown target" })
+		return
+	end
 	local content = http.formvalue("content")
 	if type(content) ~= "string" then
 		http.write_json({ ok = false, err = "missing content" })
 		return
 	end
-	if #content > 512 * 1024 then
-		http.write_json({ ok = false, err = "content too large (>512KB)" })
+	if #content > 1024 * 1024 then
+		http.write_json({ ok = false, err = "content too large (>1MB)" })
 		return
 	end
 	ensure_parent_dir(path)
@@ -1782,8 +1964,8 @@ function openclash_script_save()
 	end
 	http.write_json({
 		ok = true,
-		msg = "已保存到模板3",
-		target = target_key,
+		msg = msg,
+		target = t,
 		path = path,
 		size = #content,
 	})

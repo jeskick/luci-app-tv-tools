@@ -3,6 +3,9 @@
 # =============================================================================
 # 能力：prepend-proxy-groups、prepend-rules、include-all-proxies、filter、exclude-filter
 # 组名前缀 VGEO-，避免与订阅内默认策略组冲突。
+# AI 组（VGEO-AI-Unlock / VGEO-AI-Intl）exclude-filter：排除名称上为中国大陆/港/澳/台的节点；
+# 同时排除订阅里「Traffic:/Expire:/套餐余量」等状态占位节点（非真实出口，url-test 易误选）。
+# 无「AI 解锁」专线时也不应让 AI 走上述出口（OpenAI 地区限制、Claude 风控等）。仅靠节点名匹配，未标注地区时请在面板手动选组。
 # =============================================================================
 
 prepend-proxy-groups:
@@ -37,7 +40,7 @@ prepend-proxy-groups:
   - name: VGEO-AI-Unlock
     type: url-test
     include-all-proxies: true
-    exclude-filter: '(?i)(回国|大陆|国内|中国直连|China\s*Direct|CN\s*Direct|仅国内|本土直连|\bDIRECT\b|校园|教育|测速)'
+    exclude-filter: '(?i)(回国|大陆|国内|中国直连|China\s*Direct|CN\s*Direct|仅国内|本土直连|中国内地|中国大陆|内地节点|国内节点|大陆节点|境内|China\s*Only|CN\s*Only|中國|CMI|CMCC|中国移动|中国联通|中国电信|Chinanet|香港|Hong\s*Kong|Hongkong|\bHK\b|HKG|🇭🇰|澳门|Macau|Macao|台湾|台灣|Taiwan|\bTW\b|TPE|台北|桃园|台中|高雄|新竹|新北|彰化|台南|花莲|基隆|宜兰|云林|屏东|嘉义|南投|澎湖|金门|连江|马祖|🇹🇼|官网|到期|剩余流量|套餐余量|Traffic:|Expire:|\bDIRECT\b|校园|教育|测速)'
     filter: '(?i)(AI|GPT|ChatGPT|OpenAI|Claude|Anthropic|Gemini|人工智能|智谱|通义|文心|讯飞|解锁.*AI|AI.*解锁)'
     url: http://www.gstatic.com/generate_204
     interval: 300
@@ -47,7 +50,7 @@ prepend-proxy-groups:
   - name: VGEO-AI-Intl
     type: url-test
     include-all-proxies: true
-    exclude-filter: '(?i)(回国|大陆|国内|中国直连|China\s*Direct|CN\s*Direct|仅国内|本土直连|\bDIRECT\b|校园|教育|测速)'
+    exclude-filter: '(?i)(回国|大陆|国内|中国直连|China\s*Direct|CN\s*Direct|仅国内|本土直连|中国内地|中国大陆|内地节点|国内节点|大陆节点|境内|China\s*Only|CN\s*Only|中國|CMI|CMCC|中国移动|中国联通|中国电信|Chinanet|香港|Hong\s*Kong|Hongkong|\bHK\b|HKG|🇭🇰|澳门|Macau|Macao|台湾|台灣|Taiwan|\bTW\b|TPE|台北|桃园|台中|高雄|新竹|新北|彰化|台南|花莲|基隆|宜兰|云林|屏东|嘉义|南投|澎湖|金门|连江|马祖|🇹🇼|官网|到期|剩余流量|套餐余量|Traffic:|Expire:|\bDIRECT\b|校园|教育|测速)'
     url: http://www.gstatic.com/generate_204
     interval: 300
     tolerance: 80
@@ -96,6 +99,13 @@ prepend-rules:
   - DOMAIN-SUFFIX,hbogo.com,VGEO-MEDIA-tactics
   - DOMAIN-SUFFIX,tiktok.com,VGEO-MEDIA-tactics
   - DOMAIN-SUFFIX,tiktokv.com,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,tiktokcdn.com,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,tiktokcdn-us.com,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,tiktokcdn-eu.com,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,ttwstatic.com,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,ibyteimg.com,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,ibytedtos.com,VGEO-MEDIA-tactics
+  - DOMAIN-SUFFIX,musical.ly,VGEO-MEDIA-tactics
   - DOMAIN-SUFFIX,ttlivecdn.com,VGEO-MEDIA-tactics
   - DOMAIN-SUFFIX,muscdn.com,VGEO-MEDIA-tactics
   - DOMAIN-SUFFIX,byteoversea.com,VGEO-MEDIA-tactics
@@ -111,6 +121,23 @@ prepend-rules:
   - DOMAIN-SUFFIX,oaiusercontent.com,VGEO-AI-tactics
   - DOMAIN-SUFFIX,anthropic.com,VGEO-AI-tactics
   - DOMAIN-SUFFIX,claude.ai,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,claudeusercontent.com,VGEO-AI-tactics
+  # 登录 / OAuth / 风控 / 埋点（与主站同一出口，避免 Cookie 分区或地区不一致导致反复登录）
+  - DOMAIN-SUFFIX,auth0.com,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,stripe.com,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,stripe.network,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,stripeapi.com,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,segment.io,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,segment.com,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,launchdarkly.com,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,statsig.com,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,statsigapi.net,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,sentry.io,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,hcaptcha.com,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,recaptcha.net,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,featureassets.org,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,livekit.io,VGEO-AI-tactics
+  - DOMAIN-SUFFIX,livekit.cloud,VGEO-AI-tactics
   - DOMAIN-SUFFIX,browser-intake-datadoghq.com,VGEO-AI-tactics
   - DOMAIN-SUFFIX,intercom.io,VGEO-AI-tactics
   - DOMAIN-SUFFIX,intercomcdn.com,VGEO-AI-tactics
